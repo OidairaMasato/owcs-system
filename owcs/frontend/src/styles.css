@@ -755,3 +755,17 @@ body {
   color: var(--fg);
   font-style: normal;
 }
+
+/* ---- 出典・免責 ---- */
+
+.credit {
+  margin: 18px 0 0;
+  font-size: 10px;
+  line-height: 1.8;
+  color: var(--fg-dim);
+  text-align: center;
+}
+
+.credit a {
+  color: var(--fg-mid);
+}

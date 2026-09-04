@@ -1,5 +1,6 @@
 package jp.oidaira.owcs.web;
 
+import jp.oidaira.owcs.sync.LogoSyncService;
 import jp.oidaira.owcs.sync.MatchSyncService;
 import jp.oidaira.owcs.sync.StandingsSyncService;
 import jp.oidaira.owcs.sync.SyncCoordinator;
@@ -14,13 +15,16 @@ public class LeagueController {
     private final LeagueService service;
     private final MatchSyncService matches;
     private final StandingsSyncService standings;
+    private final LogoSyncService logos;
     private final SyncCoordinator coordinator;
 
     public LeagueController(LeagueService service, MatchSyncService matches,
-                            StandingsSyncService standings, SyncCoordinator coordinator) {
+                            StandingsSyncService standings, LogoSyncService logos,
+                            SyncCoordinator coordinator) {
         this.service = service;
         this.matches = matches;
         this.standings = standings;
+        this.logos = logos;
         this.coordinator = coordinator;
     }
 
@@ -43,6 +47,7 @@ public class LeagueController {
         matches.syncMatches();
         matches.syncGameDetails();
         standings.sync();
+        logos.sync();
         return ResponseEntity.ok(service.build(serieId));
     }
 }

@@ -182,6 +182,21 @@ export default function App() {
         </button>
       </footer>
       {error && <p className="error-inline">更新に失敗しました: {error}</p>}
+
+      {/*
+        出典表示は PandaScore の規約で必須。
+        非公式である旨も、大会主催者と無関係であることを示すために出す。
+      */}
+      <p className="credit">
+        Source:{" "}
+        <a href="https://www.pandascore.co/" target="_blank" rel="noreferrer noopener">
+          PandaScore
+        </a>
+        <br />
+        本サイトは個人が趣味で運営する非公式のものです。
+        Overwatch および OWCS は Blizzard Entertainment, Inc. の商標です。
+        大会主催者・各チームとは一切関係ありません。
+      </p>
     </main>
   );
 }

@@ -1,9 +1,11 @@
 package jp.oidaira.owcs.pandascore;
 
+import java.time.Duration;
 import java.util.List;
 import jp.oidaira.owcs.OwcsProperties;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -25,7 +27,14 @@ public class PandaScoreClient {
 
     public PandaScoreClient(OwcsProperties props) {
         this.configured = props.pandascore().configured();
+        // タイムアウトは必ず入れる。既定の HTTP クライアントは無制限に待つため、
+        // PandaScore が応答しないと同期スレッドがそのまま止まる。
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofSeconds(5));
+        factory.setReadTimeout(Duration.ofSeconds(15));
+
         this.rest = RestClient.builder()
+                .requestFactory(factory)
                 .baseUrl(props.pandascore().baseUrl())
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + props.pandascore().token())
                 .defaultHeader(HttpHeaders.ACCEPT, "application/json")

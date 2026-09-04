@@ -27,6 +27,7 @@ public class SyncCoordinator {
 
     private final MatchSyncService matches;
     private final StandingsSyncService standings;
+    private final LogoSyncService logos;
     private final SyncStateRepository syncRepo;
     private final OwcsProperties props;
 
@@ -37,9 +38,11 @@ public class SyncCoordinator {
     private volatile Instant lastAttempt = Instant.EPOCH;
 
     public SyncCoordinator(MatchSyncService matches, StandingsSyncService standings,
-                           SyncStateRepository syncRepo, OwcsProperties props) {
+                           LogoSyncService logos, SyncStateRepository syncRepo,
+                           OwcsProperties props) {
         this.matches = matches;
         this.standings = standings;
+        this.logos = logos;
         this.syncRepo = syncRepo;
         this.props = props;
     }
@@ -58,6 +61,7 @@ public class SyncCoordinator {
             matches.syncMatches();
             matches.syncGameDetails();
             standings.sync();
+            logos.sync();
         } catch (RuntimeException e) {
             // 各サービスが内部で握るので基本ここには来ないが、画面は落とさない
             log.warn("on-demand sync failed: {}", e.toString());

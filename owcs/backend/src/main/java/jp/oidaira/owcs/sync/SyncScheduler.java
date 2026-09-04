@@ -24,12 +24,14 @@ public class SyncScheduler implements ApplicationRunner {
 
     private final MatchSyncService matches;
     private final StandingsSyncService standings;
+    private final LogoSyncService logos;
     private final SyncCoordinator coordinator;
 
     public SyncScheduler(MatchSyncService matches, StandingsSyncService standings,
-                         SyncCoordinator coordinator) {
+                         LogoSyncService logos, SyncCoordinator coordinator) {
         this.matches = matches;
         this.standings = standings;
+        this.logos = logos;
         this.coordinator = coordinator;
     }
 
@@ -52,5 +54,10 @@ public class SyncScheduler implements ApplicationRunner {
     @Scheduled(cron = "0 20/30 * * * *")
     public void syncStandings() {
         standings.sync();
+    }
+
+    @Scheduled(cron = "0 25/10 * * * *")
+    public void syncLogos() {
+        logos.sync();
     }
 }

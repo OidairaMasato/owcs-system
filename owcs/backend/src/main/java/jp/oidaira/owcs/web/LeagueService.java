@@ -15,6 +15,7 @@ import jp.oidaira.owcs.domain.Team;
 import jp.oidaira.owcs.domain.Tournament;
 import jp.oidaira.owcs.repo.MatchRepository;
 import jp.oidaira.owcs.repo.SyncStateRepository;
+import jp.oidaira.owcs.repo.TeamLogoRepository;
 import jp.oidaira.owcs.repo.TeamRepository;
 import jp.oidaira.owcs.repo.TournamentRepository;
 import jp.oidaira.owcs.web.LeagueDtos.GameRow;
@@ -35,13 +36,16 @@ public class LeagueService {
     private final TeamRepository teamRepo;
     private final TournamentRepository tournamentRepo;
     private final SyncStateRepository syncRepo;
+    private final TeamLogoRepository logoRepo;
 
     public LeagueService(MatchRepository matchRepo, TeamRepository teamRepo,
-                         TournamentRepository tournamentRepo, SyncStateRepository syncRepo) {
+                         TournamentRepository tournamentRepo, SyncStateRepository syncRepo,
+                         TeamLogoRepository logoRepo) {
         this.matchRepo = matchRepo;
         this.teamRepo = teamRepo;
         this.tournamentRepo = tournamentRepo;
         this.syncRepo = syncRepo;
+        this.logoRepo = logoRepo;
     }
 
     /**
@@ -74,8 +78,9 @@ public class LeagueService {
             standings.rows().forEach(r -> teamIds.add(r.teamId()));
         }
 
+        Set<Integer> withLogo = new java.util.HashSet<>(logoRepo.findAllTeamIds());
         List<TeamView> teams = teamRepo.findAllById(teamIds).stream()
-                .map(this::toView)
+                .map(t -> toView(t, withLogo))
                 .sorted((a, b) -> a.shortName().compareToIgnoreCase(b.shortName()))
                 .toList();
 
@@ -162,8 +167,13 @@ public class LeagueService {
                 games);
     }
 
-    private TeamView toView(Team t) {
-        return new TeamView(t.getId(), t.getName(), t.shortName(), t.getImageUrl());
+    /**
+     * 画像はこちらで保持しているものだけを指す。
+     * PandaScore の URL をそのまま返すと画面から直リンクすることになり、規約に触れる。
+     */
+    private TeamView toView(Team t, Set<Integer> withLogo) {
+        String logo = withLogo.contains(t.getId()) ? "/api/logo/" + t.getId() : null;
+        return new TeamView(t.getId(), t.getName(), t.shortName(), logo);
     }
 
     private OffsetDateTime lastSynced() {
