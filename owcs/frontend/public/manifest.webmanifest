@@ -1,7 +1,7 @@
 {
-  "name": "ZETA 番 — OWCS",
-  "short_name": "ZETA 番",
-  "description": "ZETA DIVISION の試合を見逃さないためのダッシュボード",
+  "name": "OWCS Korea",
+  "short_name": "OWCS KR",
+  "description": "OWCS Korea の日程・結果・順位を見逃さないためのダッシュボード",
   "lang": "ja",
   "start_url": "/",
   "scope": "/",

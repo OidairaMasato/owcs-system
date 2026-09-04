@@ -4,8 +4,8 @@
 
 ## いま作っているもの
 
-**[owcs/](owcs/) — ZETA 番（OWCS 観戦ダッシュボード）**
-ZETA DIVISION の試合を見逃さないための個人用ダッシュボード。手入力はゼロ。
+**[owcs/](owcs/) — OWCS Korea（観戦ダッシュボード）**
+OWCS Korea の試合を見逃さないための個人用ダッシュボード。手入力はゼロ。
 起動手順は [owcs/README.md](owcs/README.md)、次にやることは [owcs/NEXT.md](owcs/NEXT.md)。
 
 ## archive/

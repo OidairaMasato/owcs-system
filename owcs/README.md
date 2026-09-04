@@ -1,7 +1,10 @@
-# ZETA 番 — OWCS 観戦ダッシュボード
+# OWCS Korea — 観戦ダッシュボード
 
-ZETA DIVISION の試合を見逃さないための個人用ダッシュボード。
+OWCS Korea の試合を見逃さないための個人用ダッシュボード。
 **入力欄はひとつも無い。** データは PandaScore から自動で溜まる。
+
+「リーグ」タブでステージ全体の日程と順位表、「チーム」タブで 1 チームを追う。
+チームは全て対等に扱い、最後に見たチームだけ端末に記憶する。
 
 - 要件: [REQUIREMENTS.md](REQUIREMENTS.md)
 - データソースの検証記録: [data-source.md](data-source.md)
