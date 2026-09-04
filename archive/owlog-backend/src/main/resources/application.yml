@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: owlog
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/owlog}
+    username: ${DB_USER:owlog}
+    password: ${DB_PASSWORD:owlog}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate.jdbc.time_zone: Asia/Tokyo
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+owlog:
+  # v1 は単一ユーザー。認証を入れるまでの暫定
+  default-battle-tag: ${OWLOG_BATTLE_TAG:おれまさと#3428}
+  cors-origins: ${OWLOG_CORS:http://localhost:5173}
+
+logging:
+  level:
+    jp.oidaira.owlog: DEBUG

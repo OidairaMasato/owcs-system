@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ZETA 番 — UI 案 3種</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #16181d; color: #e8ecf4;
+    font-family: "Hiragino Kaku Gothic ProN","Yu Gothic UI",system-ui,sans-serif;
+    padding: 24px 16px 64px;
+  }
+  .page-head { max-width: 1240px; margin: 0 auto 28px; }
+  .page-head h1 { margin: 0 0 6px; font-size: 20px; letter-spacing: .04em; }
+  .page-head p { margin: 0; font-size: 13px; color: #8d97ab; line-height: 1.7; }
+  .grid {
+    max-width: 1240px; margin: 0 auto;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 22px;
+  }
+  .col > h2 {
+    margin: 0 0 4px; font-size: 15px; letter-spacing: .02em;
+  }
+  .col > p.note { margin: 0 0 14px; font-size: 12px; color: #8d97ab; line-height: 1.7; }
+  .phone {
+    border-radius: 18px; overflow: hidden; border: 1px solid #2a2f3a;
+  }
+
+  /* ============ A. BROADCAST ============ */
+  .A { background:#07080c; color:#f2f4f8; padding:16px 14px 20px; font-family:inherit; }
+  .A .hd { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+  .A .hd b { font-size:17px; font-style:italic; letter-spacing:.02em; }
+  .A .hd span { font-size:9px; letter-spacing:.3em; color:#6b7488; }
+  .A .next {
+    position:relative; overflow:hidden; border-radius:4px;
+    background:linear-gradient(135deg,#141826 0%,#0b0d14 60%); padding:18px 16px 16px; margin-bottom:14px;
+  }
+  .A .next::before {
+    content:""; position:absolute; inset:0 auto 0 0; width:5px;
+    background:linear-gradient(#ff4655,#ff8a3d);
+  }
+  .A .next::after {
+    content:""; position:absolute; right:-40px; top:-40px; width:150px; height:150px;
+    background:radial-gradient(circle,rgba(255,70,85,.22),transparent 65%);
+  }
+  .A .cdlabel { font-size:9px; letter-spacing:.28em; color:#8d97ab; margin-bottom:2px; }
+  .A .cd { font-size:40px; font-weight:800; font-style:italic; letter-spacing:-.02em; line-height:1; font-variant-numeric:tabular-nums; }
+  .A .cd small { font-size:15px; font-weight:700; margin-left:2px; opacity:.7; }
+  .A .when { font-size:12px; color:#a8b0c2; margin:8px 0 14px; }
+  .A .vs { display:flex; align-items:center; gap:12px; margin-bottom:16px; position:relative; z-index:1;}
+  .A .tm { flex:1; display:flex; align-items:center; gap:9px; }
+  .A .tm.r { flex-direction:row-reverse; text-align:right; }
+  .A .lg { width:34px;height:34px;border-radius:3px;display:grid;place-items:center;font-size:10px;font-weight:800;background:#1b2130;color:#8d97ab; }
+  .A .tm b { font-size:15px; font-style:italic; letter-spacing:.01em; }
+  .A .vsx { font-size:11px; font-style:italic; color:#5a6174; }
+  .A .watch {
+    display:block; text-align:center; background:#ff4655; color:#fff; padding:12px;
+    font-weight:800; font-size:13px; letter-spacing:.08em; border-radius:3px; text-decoration:none; position:relative; z-index:1;
+  }
+  .A .sec { font-size:9px; letter-spacing:.28em; color:#6b7488; margin:18px 0 8px; }
+  .A .streak { display:flex; gap:4px; margin-bottom:12px; }
+  .A .streak i {
+    flex:1; height:26px; border-radius:2px; display:grid; place-items:center;
+    font-size:10px; font-weight:800; font-style:normal;
+  }
+  .A .streak i.w { background:rgba(70,211,154,.14); color:#46d39a; }
+  .A .streak i.l { background:rgba(255,255,255,.05); color:#5a6174; }
+  .A .row { display:grid; grid-template-columns:14px 42px 1fr auto; gap:9px; align-items:center; padding:9px 0; border-top:1px solid #171b24; font-size:13px; }
+  .A .row .wl { font-weight:800; font-style:italic; font-size:12px; }
+  .A .row .wl.w { color:#46d39a; } .A .row .wl.l { color:#5a6174; }
+  .A .row .sc { font-weight:800; font-style:italic; font-variant-numeric:tabular-nums; }
+  .A .row .dt { font-size:10px; color:#5a6174; }
+  .A table { width:100%; border-collapse:collapse; font-size:12px; }
+  .A th { font-size:9px; letter-spacing:.16em; color:#5a6174; text-align:right; padding-bottom:6px; font-weight:500;}
+  .A td { padding:7px 0; text-align:right; font-variant-numeric:tabular-nums; color:#8d97ab; border-top:1px solid #171b24;}
+  .A td.t, .A th.t { text-align:left; }
+  .A tr.me td { color:#f2f4f8; font-weight:800; font-style:italic; background:linear-gradient(90deg,rgba(255,70,85,.12),transparent); }
+  .A tr.me td.r { color:#ff4655; }
+
+  /* ============ B. TERMINAL ============ */
+  .B {
+    background:#0a0b0d; color:#d7dde4; padding:16px 14px 20px;
+    font-family:ui-monospace,"SFMono-Regular",Consolas,monospace;
+  }
+  .B .hd { display:flex; justify-content:space-between; border-bottom:1px solid #21252b; padding-bottom:9px; margin-bottom:14px; font-size:11px; }
+  .B .hd b { letter-spacing:.06em; }
+  .B .hd span { color:#4d5560; }
+  .B .box { border:1px solid #21252b; padding:13px; margin-bottom:14px; }
+  .B .k { font-size:10px; color:#4d5560; letter-spacing:.1em; }
+  .B .cd { font-size:29px; letter-spacing:-.01em; margin:5px 0 3px; color:#7ee0b0; font-variant-numeric:tabular-nums; }
+  .B .when { font-size:12px; color:#9aa4b0; margin-bottom:12px; }
+  .B .mt { display:flex; justify-content:space-between; align-items:center; font-size:14px; padding:9px 0; border-top:1px dashed #21252b; border-bottom:1px dashed #21252b; margin-bottom:12px;}
+  .B .mt em { font-style:normal; color:#4d5560; font-size:11px; }
+  .B .watch { display:block; text-align:center; border:1px solid #7ee0b0; color:#7ee0b0; padding:9px; font-size:12px; text-decoration:none; letter-spacing:.06em; }
+  .B .sec { font-size:10px; color:#4d5560; letter-spacing:.1em; margin:16px 0 7px; }
+  .B .streak { font-size:15px; letter-spacing:.22em; color:#7ee0b0; margin-bottom:10px; }
+  .B .streak span.l { color:#4d5560; }
+  .B pre { margin:0; font-size:12px; line-height:1.9; color:#9aa4b0; }
+  .B pre b { color:#d7dde4; font-weight:400; }
+  .B pre .w { color:#7ee0b0; }
+  .B pre .me { color:#ffd166; }
+  .B pre .hdr { color:#4d5560; }
+
+  /* ============ C. SOFT GLASS ============ */
+  .C {
+    position:relative; padding:20px 16px 24px; color:#eef1f7; overflow:hidden;
+    background:#0d1016;
+  }
+  .C::before { content:""; position:absolute; width:230px;height:230px; left:-70px; top:-60px;
+    background:radial-gradient(circle,rgba(120,110,255,.36),transparent 68%); filter:blur(6px); }
+  .C::after { content:""; position:absolute; width:250px;height:250px; right:-90px; top:120px;
+    background:radial-gradient(circle,rgba(255,90,120,.28),transparent 68%); filter:blur(6px); }
+  .C > * { position:relative; z-index:1; }
+  .C .hd { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:16px; }
+  .C .hd b { font-size:18px; font-weight:700; letter-spacing:.01em; }
+  .C .hd span { font-size:10px; color:#9aa2b8; letter-spacing:.18em; }
+  .C .card {
+    background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.09);
+    border-radius:20px; padding:18px 16px; margin-bottom:14px;
+    box-shadow:0 8px 30px rgba(0,0,0,.28);
+  }
+  .C .pill { display:inline-block; font-size:10px; padding:4px 10px; border-radius:99px;
+    background:rgba(255,255,255,.1); color:#c3cadb; letter-spacing:.06em; margin-bottom:12px;}
+  .C .cd { font-size:34px; font-weight:700; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
+  .C .cd small { font-size:14px; opacity:.6; margin-left:3px; }
+  .C .when { font-size:13px; color:#a8b0c6; margin:4px 0 16px; }
+  .C .vs { display:flex; align-items:center; justify-content:center; gap:16px; margin-bottom:18px; }
+  .C .tm { text-align:center; }
+  .C .lg { width:52px;height:52px;border-radius:16px;background:rgba(255,255,255,.09);display:grid;place-items:center;
+    font-size:11px;font-weight:700;color:#c3cadb;margin:0 auto 7px; }
+  .C .tm b { font-size:13px; font-weight:600; }
+  .C .vsx { font-size:11px; color:#8189a0; }
+  .C .watch { display:block; text-align:center; border-radius:14px; padding:13px; text-decoration:none;
+    background:linear-gradient(135deg,#ff5a78,#ff8a3d); color:#fff; font-weight:700; font-size:14px; }
+  .C h3 { margin:0 0 11px; font-size:12px; color:#9aa2b8; font-weight:600; letter-spacing:.04em;}
+  .C .streak { display:flex; gap:5px; margin-bottom:13px; }
+  .C .streak i { flex:1; height:5px; border-radius:99px; background:rgba(255,255,255,.1); }
+  .C .streak i.w { background:linear-gradient(90deg,#5ee6a8,#3fcf8e); }
+  .C .row { display:flex; align-items:center; gap:10px; padding:10px 0; font-size:14px; border-top:1px solid rgba(255,255,255,.06); }
+  .C .row:first-of-type { border-top:none; }
+  .C .dot { width:7px;height:7px;border-radius:99px;background:#5ee6a8; flex:none;}
+  .C .dot.l { background:#5c6478; }
+  .C .row .sc { font-weight:700; font-variant-numeric:tabular-nums; min-width:38px; }
+  .C .row .op { flex:1; }
+  .C .row .dt { font-size:11px; color:#8189a0; }
+  .C .st { display:flex; align-items:center; gap:10px; padding:9px 0; font-size:13px; color:#a8b0c6;
+    border-top:1px solid rgba(255,255,255,.06); }
+  .C .st:first-of-type { border-top:none; }
+  .C .st .r { width:18px; color:#8189a0; font-variant-numeric:tabular-nums; }
+  .C .st .n { flex:1; }
+  .C .st .v { font-variant-numeric:tabular-nums; }
+  .C .st.me { color:#fff; font-weight:700; }
+  .C .st.me .r { color:#ff8fa3; }
+  .C .st.dim { opacity:.45; }
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <h1>ZETA 番 — UI 案 3種</h1>
+  <p>同じデータ・同じ情報量で、見た目の方向性だけを変えています。共通の改善（カウントダウンを主役サイズに、連勝ストリークの可視化、順位表は自分の周辺だけ強調）は3案すべてに入れています。</p>
+</div>
+
+<div class="grid">
+
+<!-- ============ A ============ -->
+<div class="col">
+  <h2>案A — Broadcast</h2>
+  <p class="note">OWCS の中継グラフィック風。斜体の太い数字、チームカラーの縦バー、大きめのVS。試合前の高揚感が出る。「推しを見る」画面としては一番テンションが合う。</p>
+  <div class="phone A">
+    <div class="hd"><b>ZETA 番</b><span>OWCS</span></div>
+
+    <div class="next">
+      <div class="cdlabel">NEXT MATCH IN</div>
+      <div class="cd">2<small>日</small> 05<small>時間</small></div>
+      <div class="when">10/4(土) 17:00 · Korea Stage 3 2026 · Group Stage</div>
+      <div class="vs">
+        <div class="tm"><div class="lg">ZETA</div><b>ZETA</b></div>
+        <div class="vsx">VS</div>
+        <div class="tm r"><div class="lg">T1</div><b>T1</b></div>
+      </div>
+      <a class="watch" href="#">TWITCH で見る</a>
+    </div>
+
+    <div class="sec">RECENT FORM</div>
+    <div class="streak"><i class="w">W</i><i class="w">W</i><i class="w">W</i><i class="w">W</i><i class="w">W</i></div>
+    <div class="row"><span class="wl w">W</span><span class="sc">4–2</span><span>TM</span><span class="dt">8/3</span></div>
+    <div class="row"><span class="wl w">W</span><span class="sc">3–0</span><span>T1</span><span class="dt">8/2</span></div>
+    <div class="row"><span class="wl w">W</span><span class="sc">3–0</span><span>DAL</span><span class="dt">8/1</span></div>
+
+    <div class="sec">STANDINGS</div>
+    <table>
+      <tr><th class="t">#</th><th class="t">TEAM</th><th>W</th><th>L</th><th>MAP</th></tr>
+      <tr><td class="t r">1</td><td class="t">CR</td><td>7</td><td>1</td><td>23-5</td></tr>
+      <tr class="me"><td class="t r">1</td><td class="t">ZETA</td><td>7</td><td>1</td><td>23-7</td></tr>
+      <tr><td class="t r">3</td><td class="t">T1</td><td>6</td><td>2</td><td>21-8</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ============ B ============ -->
+<div class="col">
+  <h2>案B — Terminal</h2>
+  <p class="note">等幅フォントとハイラインで構成したデータ端末風。装飾が無いぶん数字が一番読みやすく、情報密度を上げられる。ただし「試合を楽しみに待つ」高揚感は薄い。</p>
+  <div class="phone B">
+    <div class="hd"><b>ZETA_DIVISION</b><span>OWCS//KR</span></div>
+
+    <div class="box">
+      <div class="k">NEXT_MATCH_IN</div>
+      <div class="cd">02d 05h 12m</div>
+      <div class="when">2026-10-04 17:00 JST</div>
+      <div class="mt"><span>ZETA</span><em>vs</em><span>T1</span></div>
+      <a class="watch" href="#">&gt; OPEN TWITCH</a>
+    </div>
+
+    <div class="sec">RECENT_FORM</div>
+    <div class="streak">W W W W W</div>
+<pre><span class="hdr">RES  SCORE  OPP    DATE</span>
+<span class="w">W</span>    4-2    <b>TM</b>     08/03
+<span class="w">W</span>    3-0    <b>T1</b>     08/02
+<span class="w">W</span>    3-0    <b>DAL</b>    08/01</pre>
+
+    <div class="sec">STANDINGS // KR_S2_GROUP</div>
+<pre><span class="hdr">#  TEAM    W  L  MAPS</span>
+1  <b>CR</b>      7  1  23-5
+<span class="me">1  ZETA    7  1  23-7</span>
+3  <b>T1</b>      6  2  21-8</pre>
+  </div>
+</div>
+
+<!-- ============ C ============ -->
+<div class="col">
+  <h2>案C — Soft Glass</h2>
+  <p class="note">半透明のカードと背景のぼかしで奥行きを出す現代的な作り。柔らかく上品で、スマホのホーム画面から開いたときに一番「アプリらしく」見える。中継感は控えめ。</p>
+  <div class="phone C">
+    <div class="hd"><b>ZETA 番</b><span>OWCS</span></div>
+
+    <div class="card">
+      <span class="pill">Korea Stage 3 2026 · Group Stage</span>
+      <div class="cd">2<small>日</small> 5<small>時間</small></div>
+      <div class="when">10/4(土) 17:00</div>
+      <div class="vs">
+        <div class="tm"><div class="lg">ZETA</div><b>ZETA</b></div>
+        <div class="vsx">vs</div>
+        <div class="tm"><div class="lg">T1</div><b>T1</b></div>
+      </div>
+      <a class="watch" href="#">Twitch で見る</a>
+    </div>
+
+    <div class="card">
+      <h3>直近の結果</h3>
+      <div class="streak"><i class="w"></i><i class="w"></i><i class="w"></i><i class="w"></i><i class="w"></i></div>
+      <div class="row"><span class="dot"></span><span class="sc">4–2</span><span class="op">TM</span><span class="dt">8/3</span></div>
+      <div class="row"><span class="dot"></span><span class="sc">3–0</span><span class="op">T1</span><span class="dt">8/2</span></div>
+      <div class="row"><span class="dot"></span><span class="sc">3–0</span><span class="op">DAL</span><span class="dt">8/1</span></div>
+    </div>
+
+    <div class="card">
+      <h3>順位表</h3>
+      <div class="st"><span class="r">1</span><span class="n">CR</span><span class="v">7-1</span></div>
+      <div class="st me"><span class="r">1</span><span class="n">ZETA</span><span class="v">7-1</span></div>
+      <div class="st"><span class="r">3</span><span class="n">T1</span><span class="v">6-2</span></div>
+      <div class="st dim"><span class="r">3</span><span class="n">FAL</span><span class="v">6-2</span></div>
+      <div class="st dim"><span class="r">5</span><span class="n">O2B</span><span class="v">4-4</span></div>
+    </div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

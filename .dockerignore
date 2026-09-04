@@ -1,0 +1,9 @@
+archive/
+トークン/
+**/node_modules/
+**/target/
+**/dist/
+**/.git/
+*.md
+.gitignore
+**/tsconfig.tsbuildinfo

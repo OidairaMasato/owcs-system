@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/api.ts","./src/format.ts","./src/main.tsx","./src/types.ts","./src/vite-env.d.ts","./src/components/formstrip.tsx","./src/components/nextmatchcard.tsx","./src/components/recentstrip.tsx","./src/components/standingstable.tsx","./src/components/teambadge.tsx","./src/components/upcominglist.tsx"],"version":"5.9.3"}

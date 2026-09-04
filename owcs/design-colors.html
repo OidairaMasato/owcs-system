@@ -1,0 +1,834 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ZETA 番 — ベースカラー比較</title>
+<style>
+  * { box-sizing:border-box; }
+  body { margin:0; background:#1c1f26; color:#e8ecf4; padding:24px 16px 64px;
+    font-family:"Hiragino Kaku Gothic ProN","Yu Gothic UI",system-ui,sans-serif; }
+  .page-head { max-width:1460px; margin:0 auto 26px; }
+  .page-head h1 { margin:0 0 6px; font-size:20px; }
+  .page-head p { margin:0; font-size:13px; color:#98a1b3; line-height:1.7; }
+  .grid { max-width:1460px; margin:0 auto; display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(330px,1fr)); gap:20px; }
+  .col > h2 { margin:0 0 4px; font-size:14px; }
+  .col > p.note { margin:0 0 12px; font-size:12px; color:#98a1b3; line-height:1.65; min-height:52px; }
+  .pv { border-radius:14px; overflow:hidden; border:1px solid #333a45; padding:14px 12px 16px; }
+/*
+ * Broadcast スタイル。
+ * 方針:
+ * - 数字は斜体・太字・等幅数字。中継グラフィックの見え方に寄せる。
+ * - セクション見出しは英字の大文字＋広いトラッキング。日本語は本文だけ。
+ * - アクセントは 1 色（ZETA レッド）に絞り、そこだけが目を引くようにする。
+ */
+
+.pv {
+  --bg: #07080c;
+  --panel: #10131b;
+  --panel-2: #171b26;
+  --line: #1b2028;
+  --fg: #f2f4f8;
+  --fg-mid: #a8b0c2;
+  --fg-dim: #5a6174;
+  --accent: #ff4655;
+  --accent-2: #ff8a3d;
+  --win: #46d39a;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.pv {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic UI", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app {
+  max-width: none;
+  margin: 0;
+  padding: 16px 14px 48px;
+}
+
+/* ---- ヘッダー ---- */
+
+.app-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.app-head h1 {
+  margin: 0;
+  font-size: 19px;
+  font-style: italic;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.league {
+  font-size: 9px;
+  color: var(--fg-dim);
+  letter-spacing: 0.3em;
+}
+
+/* ---- 次の試合 ---- */
+
+.next {
+  position: relative;
+  overflow: hidden;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #141826 0%, #0b0d14 62%);
+  padding: 18px 16px 16px;
+  margin-bottom: 22px;
+}
+
+/* 左端のチームカラーバー */
+.next::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  background: linear-gradient(var(--accent), var(--accent-2));
+}
+
+/* 右上の光 */
+.next::after {
+  content: "";
+  position: absolute;
+  right: -40px;
+  top: -40px;
+  width: 170px;
+  height: 170px;
+  background: radial-gradient(circle, rgba(255, 70, 85, 0.2), transparent 65%);
+  pointer-events: none;
+}
+
+.next > * {
+  position: relative;
+  z-index: 1;
+}
+
+.next.is-live::before {
+  background: var(--accent);
+}
+
+.next-label {
+  font-size: 9px;
+  letter-spacing: 0.28em;
+  color: var(--fg-dim);
+  margin-bottom: 2px;
+}
+
+.next-label.live {
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 99px;
+  background: var(--accent);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+
+.countdown {
+  margin: 0;
+  font-size: 42px;
+  font-weight: 800;
+  font-style: italic;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.countdown small {
+  font-size: 15px;
+  font-weight: 700;
+  margin-left: 2px;
+  opacity: 0.65;
+}
+
+.cd-soon {
+  font-size: 30px;
+}
+
+.countdown-live {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 800;
+  font-style: italic;
+  letter-spacing: -0.01em;
+}
+
+.next-when {
+  margin: 9px 0 2px;
+  font-size: 13px;
+  color: var(--fg-mid);
+  font-variant-numeric: tabular-nums;
+}
+
+.next-meta {
+  margin: 0 0 16px;
+  font-size: 11px;
+  color: var(--fg-dim);
+}
+
+.next-teams {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.side {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.side.right {
+  flex-direction: row;
+  justify-content: flex-end;
+}
+
+.side b {
+  font-size: 15px;
+  font-style: italic;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vsx {
+  font-size: 11px;
+  font-style: italic;
+  color: var(--fg-dim);
+  flex: none;
+}
+
+.watch {
+  display: block;
+  text-align: center;
+  background: var(--accent);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  padding: 13px;
+  border-radius: 3px;
+}
+
+.no-stream {
+  margin: 0;
+  font-size: 11px;
+  color: var(--fg-dim);
+}
+
+.next-empty {
+  text-align: center;
+  padding: 34px 16px;
+}
+
+.next-empty::before {
+  background: var(--line);
+}
+
+.empty-title {
+  margin: 0 0 7px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  color: var(--fg-mid);
+}
+
+.empty-sub {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fg-dim);
+}
+
+/* ---- バッジ ---- */
+
+.badge {
+  display: grid;
+  place-items: center;
+  background: var(--panel-2);
+  border-radius: 3px;
+  overflow: hidden;
+  flex: none;
+}
+
+.badge img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.badge-lg { width: 48px; height: 48px; }
+.badge-md { width: 34px; height: 34px; }
+.badge-sm { width: 24px; height: 24px; }
+
+.badge-text {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--fg-dim);
+}
+
+/* ---- セクション ---- */
+
+.block {
+  margin-bottom: 22px;
+}
+
+.block-title {
+  margin: 0 0 9px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  color: var(--fg-dim);
+}
+
+.block-sub {
+  display: block;
+  margin-top: 4px;
+  font-size: 10px;
+  letter-spacing: 0;
+  color: var(--fg-dim);
+  font-weight: 400;
+}
+
+/* ---- 直近の勝敗の帯 ---- */
+
+.form-strip {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.form-strip i {
+  flex: 1;
+  height: 26px;
+  border-radius: 2px;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 800;
+  font-style: normal;
+}
+
+.form-strip i.w {
+  background: rgba(70, 211, 154, 0.14);
+  color: var(--win);
+}
+
+.form-strip i.l {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--fg-dim);
+}
+
+/* ---- 直近の結果 ---- */
+
+.recent-list,
+.upcoming-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.recent-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 16px 46px 1fr auto 16px;
+  align-items: center;
+  gap: 9px;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--line);
+  color: inherit;
+  font: inherit;
+  padding: 11px 2px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.wl {
+  font-weight: 800;
+  font-style: italic;
+  font-size: 12px;
+}
+
+.recent-row.win .wl { color: var(--win); }
+.recent-row.lose .wl { color: var(--fg-dim); }
+
+.score {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  font-style: italic;
+  font-size: 15px;
+}
+
+.opp {
+  font-size: 14px;
+}
+
+.when,
+.chevron {
+  font-size: 10px;
+  color: var(--fg-dim);
+}
+
+.maps {
+  padding: 2px 2px 12px;
+}
+
+.maps-serie {
+  margin: 0 0 8px;
+  font-size: 10px;
+  color: var(--fg-dim);
+}
+
+.maps-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.map {
+  display: grid;
+  grid-template-columns: 58px 1fr auto;
+  align-items: center;
+  background: var(--panel);
+  border-radius: 2px;
+  padding: 8px 10px;
+  font-size: 11px;
+}
+
+.map-no {
+  color: var(--fg-dim);
+  letter-spacing: 0.14em;
+}
+
+.map-wl {
+  font-weight: 800;
+  font-style: italic;
+  letter-spacing: 0.06em;
+}
+
+.map.win .map-wl { color: var(--win); }
+.map.lose .map-wl { color: var(--fg-dim); }
+
+.map-len {
+  color: var(--fg-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.maps-empty {
+  margin: 0;
+  font-size: 11px;
+  color: var(--fg-dim);
+}
+
+/* ---- 順位表 ---- */
+
+.standings {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.standings th {
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  color: var(--fg-dim);
+  text-align: right;
+  padding: 0 0 6px;
+}
+
+.standings td {
+  padding: 8px 0;
+  text-align: right;
+  border-top: 1px solid var(--line);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-mid);
+}
+
+.standings .col-rank {
+  width: 24px;
+  text-align: left;
+  color: var(--fg-dim);
+}
+
+.standings .col-team {
+  text-align: left;
+  padding-left: 6px;
+}
+
+.standings .col-num { width: 30px; }
+.standings .col-maps { width: 52px; font-size: 12px; }
+
+/* 自分から遠い順位は沈める */
+.standings tr.dim td {
+  opacity: 0.42;
+}
+
+/* 自分のチームの行 */
+.standings tr.me td {
+  color: var(--fg);
+  font-weight: 800;
+  font-style: italic;
+  background: linear-gradient(90deg, rgba(255, 70, 85, 0.13), transparent 70%);
+}
+
+.standings tr.me .col-rank {
+  color: var(--accent);
+}
+
+/* ---- 予定 ---- */
+
+.upcoming-list li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+  border-top: 1px solid var(--line);
+  padding: 11px 2px;
+  font-size: 13px;
+}
+
+.up-when {
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-mid);
+}
+
+.up-opp {
+  font-style: italic;
+  font-weight: 700;
+}
+
+.up-serie {
+  font-size: 10px;
+  color: var(--fg-dim);
+}
+
+/* ---- フッター ---- */
+
+.app-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--fg-dim);
+  letter-spacing: 0.06em;
+  padding-top: 4px;
+  border-top: 1px solid var(--line);
+}
+
+.ghost {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--fg-mid);
+  border-radius: 3px;
+  padding: 8px 13px;
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+.ghost:disabled {
+  opacity: 0.5;
+}
+
+.loading,
+.error,
+.error-inline {
+  font-size: 13px;
+  color: var(--fg-dim);
+  text-align: center;
+}
+
+.error,
+.error-inline {
+  color: var(--accent);
+}
+
+.pv.v1 { --bg:#07080c;--panel:#10131b;--panel-2:#171b26;--line:#1b2028;--fg:#f2f4f8;--fg-mid:#a8b0c2;--fg-dim:#5a6174;--accent:#ff4655;--accent-2:#ff8a3d;--win:#46d39a; }
+.pv.v2 { --bg:#070c18;--panel:#0f1730;--panel-2:#16203c;--line:#1b2540;--fg:#f0f4fc;--fg-mid:#a3b0cc;--fg-dim:#5b6784;--accent:#ff4655;--accent-2:#ff8a3d;--win:#46d39a; }
+.pv.v3 { --bg:#0c060d;--panel:#170d1a;--panel-2:#1f1324;--line:#251729;--fg:#f6eff6;--fg-mid:#b9a6bd;--fg-dim:#6d5b74;--accent:#ff3d71;--accent-2:#ff8a3d;--win:#46d39a; }
+.pv.v4 { --bg:#14171c;--panel:#1c2028;--panel-2:#232833;--line:#2b313c;--fg:#f0f2f6;--fg-mid:#a5adbb;--fg-dim:#6e7683;--accent:#ff4655;--accent-2:#ff8a3d;--win:#46d39a; }
+.pv.v5 { --bg:#f2f4f7;--panel:#ffffff;--panel-2:#e9ecf1;--line:#dfe3ea;--fg:#141721;--fg-mid:#525a6b;--fg-dim:#8b93a3;--accent:#e2333f;--accent-2:#f07a2b;--win:#0f9c66; }
+
+.pv.v2 .next{background:linear-gradient(135deg,#16203c 0%,#0a1122 62%);}
+.pv.v3 .next{background:linear-gradient(135deg,#221430 0%,#100815 62%);}.pv.v3 .next::after{background:radial-gradient(circle,rgba(255,61,113,.24),transparent 65%);}
+.pv.v4 .next{background:linear-gradient(135deg,#242a36 0%,#171b22 62%);}
+.pv.v5 .next{background:linear-gradient(135deg,#ffffff 0%,#e9edf4 62%);}
+      .pv.v5 .next::after{background:radial-gradient(circle,rgba(226,51,63,.13),transparent 65%);}
+      .pv.v5 .form-strip i.l{background:rgba(0,0,0,.06);}
+      .pv.v5 .form-strip i.w{background:rgba(15,156,102,.15);}
+      .pv.v5 .standings tr.me td{background:linear-gradient(90deg,rgba(226,51,63,.12),transparent 70%);}
+      .pv.v5 .map{background:#eef1f6;}
+</style></head>
+<body>
+<div class="page-head">
+  <h1>ZETA 番 — ベースカラー比較</h1>
+  <p>レイアウトは Broadcast のまま、ベースカラーとアクセントだけを変えています。実際の styles.css をそのまま読み込んでいるので、見え方は本番と同じです。</p>
+</div>
+<div class="grid">
+<div class="col">
+  <h2>1. Jet Black（現行）</h2>
+  <p class="note">いまの状態。最もコントラストが強く、アクセントの赤が一番冴える。長時間見ると硬い印象。</p>
+  <div class="pv v1">
+<div class="app">
+  <header class="app-head"><h1>ZETA 番</h1><span class="league">OWCS</span></header>
+  <section class="next">
+    <div class="next-label">NEXT MATCH IN</div>
+    <p class="countdown"><span>2<small>日</small></span><span>05<small>時間</small></span></p>
+    <p class="next-when">10/4(土) 17:00</p>
+    <p class="next-meta">Korea Stage 3 2026 · Group Stage · BO5</p>
+    <div class="next-teams">
+      <div class="side"><div class="badge badge-md"><span class="badge-text">ZETA</span></div><b>ZETA</b></div>
+      <span class="vsx">VS</span>
+      <div class="side right"><b>T1</b><div class="badge badge-md"><span class="badge-text">T1</span></div></div>
+    </div>
+    <a class="watch" href="#">TWITCH で見る</a>
+  </section>
+  <section class="block">
+    <h2 class="block-title">RECENT FORM</h2>
+    <div class="form-strip"><i class="w">W</i><i class="w">W</i><i class="w">W</i><i class="w">W</i><i class="w">W</i></div>
+    <ul class="recent-list">
+      <li><div class="recent-row win"><span class="wl">W</span><span class="score">4–2</span><span class="opp">TM</span><span class="when">8/3(月) 00:37</span><span class="chevron">＋</span></div></li>
+      <li><div class="recent-row win"><span class="wl">W</span><span class="score">3–0</span><span class="opp">T1</span><span class="when">8/2(日) 19:06</span><span class="chevron">＋</span></div></li>
+      <li><div class="recent-row win"><span class="wl">W</span><span class="score">3–0</span><span class="opp">DAL</span><span class="when">8/1(土) 20:42</span><span class="chevron">＋</span></div></li>
+    </ul>
+  </section>
+  <section class="block">
+    <h2 class="block-title">STANDINGS<span class="block-sub">Korea Stage 2 2026 · Group Stage</span></h2>
+    <table class="standings">
+      <thead><tr><th class="col-rank">#</th><th class="col-team">TEAM</th><th class="col-num">W</th><th class="col-num">L</th><th class="col-maps">MAPS</th></tr></thead>
+      <tbody>
+        <tr><td class="col-rank">1</td><td class="col-team">CR</td><td class="col-num">7</td><td class="col-num">1</td><td class="col-maps">23-5</td></tr>
+        <tr class="me"><td class="col-rank">1</td><td class="col-team">ZETA</td><td class="col-num">7</td><td class="col-num">1</td><td class="col-maps">23-7</td></tr>
+        <tr><td class="col-rank">3</td><td class="col-team">T1</td><td class="col-num">6</td><td class="col-num">2</td><td class="col-maps">21-8</td></tr>
+        <tr><td class="col-rank">3</td><td class="col-team">FAL</td><td class="col-num">6</td><td class="col-num">2</td><td class="col-maps">18-8</td></tr>
+        <tr class="dim"><td class="col-rank">5</td><td class="col-team">O2B</td><td class="col-num">4</td><td class="col-num">4</td><td class="col-maps">13-14</td></tr>
+        <tr class="dim"><td class="col-rank">6</td><td class="col-team">ZSG</td><td class="col-num">3</td><td class="col-num">5</td><td class="col-maps">11-17</td></tr>
+      </tbody>
+    </table>
+  </section>
+  <footer class="app-foot"><span>最終更新 たった今</span><button class="ghost">今すぐ更新</button></footer>
+</div>
+</div>
+</div>
+
+<div class="col">
+  <h2>2. Midnight Navy</h2>
+  <p class="note">黒に青みを入れた定番。eスポーツ配信の背景に多い色で、赤との相性が良く、黒より柔らかい。</p>
+  <div class="pv v2">
+<div class="app">
+  <header class="app-head"><h1>ZETA 番</h1><span class="league">OWCS</span></header>
+  <section class="next">
+    <div class="next-label">NEXT MATCH IN</div>
+    <p class="countdown"><span>2<small>日</small></span><span>05<small>時間</small></span></p>
+    <p class="next-when">10/4(土) 17:00</p>
+    <p class="next-meta">Korea Stage 3 2026 · Group Stage · BO5</p>
+    <div class="next-teams">
+      <div class="side"><div class="badge badge-md"><span class="badge-text">ZETA</span></div><b>ZETA</b></div>
+      <span class="vsx">VS</span>
+      <div class="side right"><b>T1</b><div class="badge badge-md"><span class="badge-text">T1</span></div></div>
+    </div>
+    <a class="watch" href="#">TWITCH で見る</a>
+  </section>
+  <section class="block">
+    <h2 class="block-title">RECENT FORM</h2>
+    <div class="form-strip"><i class="w">W</i><i class="w">W</i><i class="w">W</i><i class="w">W</i><i class="w">W</i></div>
+    <ul class="recent-list">
+      <li><div class="recent-row win"><span class="wl">W</span><span class="score">4–2</span><span class="opp">TM</span><span class="when">8/3(月) 00:37</span><span class="chevron">＋</span></div></li>
+      <li><div class="recent-row win"><span class="wl">W</span><span class="score">3–0</span><span class="opp">T1</span><span class="when">8/2(日) 19:06</span><span class="chevron">＋</span></div></li>
+      <li><div class="recent-row win"><span class="wl">W</span><span class="score">3–0</span><span class="opp">DAL</span><span class="when">8/1(土) 20:42</span><span class="chevron">＋</span></div></li>
+    </ul>
+  </section>
+  <section class="block">
+    <h2 class="block-title">STANDINGS<span class="block-sub">Korea Stage 2 2026 · Group Stage</span></h2>
+    <table class="standings">
+      <thead><tr><th class="col-rank">#</th><th class="col-team">TEAM</th><th class="col-num">W</th><th class="col-num">L</th><th class="col-maps">MAPS</th></tr></thead>
+      <tbody>
+        <tr><td class="col-rank">1</td><td class="col-team">CR</td><td class="col-num">7</td><td class="col-num">1</td><td class="col-maps">23-5</td></tr>
+        <tr class="me"><td class="col-rank">1</td><td class="col-team">ZETA</td><td class="col-num">7</td><td class="col-num">1</td><td class="col-maps">23-7</td></tr>
+        <tr><td class="col-rank">3</td><td class="col-team">T1</td><td class="col-num">6</td><td class="col-num">2</td><td class="col-maps">21-8</td></tr>
+        <tr><td class="col-rank">3</td><td class="col-team">FAL</td><td class="col-num">6</td><td class="col-num">2</td><td class="col-maps">18-8</td></tr>
+        <tr class="dim"><td class="col-rank">5</td><td class="col-team">O2B</td><td class="col-num">4</td><td class="col-num">4</td><td class="col-maps">13-14</td></tr>
+        <tr class="dim"><td class="col-rank">6</td><td class="col-team">ZSG</td><td class="col-num">3</td><td class="col-num">5</td><td class="col-maps">11-17</td></tr>
+      </tbody>
+    </table>
+  </section>
+  <footer class="app-foot"><span>最終更新 たった今</span><button class="ghost">今すぐ更新</button></footer>
+</div>
+</div>
+</div>
+
+<div class="col">
+  <h2>3. Deep Plum</h2>
+  <p class="note">赤紫寄りの黒。アクセントの赤が背景と地続きになり、全体が一つの色でまとまる。個性は一番強い。</p>
+  <div class="pv v3">
+<div class="app">
+  <header class="app-head"><h1>ZETA 番</h1><span class="league">OWCS</span></header>
+  <section class="next">
+    <div class="next-label">NEXT MATCH IN</div>
+    <p class="countdown"><span>2<small>日</small></span><span>05<small>時間</small></span></p>
+    <p class="next-when">10/4(土) 17:00</p>
+    <p class="next-meta">Korea Stage 3 2026 · Group Stage · BO5</p>
+    <div class="next-teams">
+      <div class="side"><div class="badge badge-md"><span class="badge-text">ZETA</span></div><b>ZETA</b></div>
+      <span class="vsx">VS</span>
+      <div class="side right"><b>T1</b><div class="badge badge-md"><span class="badge-text">T1</span></div></div>
+    </div>
+    <a class="watch" href="#">TWITCH で見る</a>
+  </section>
+  <section class="block">
+    <h2 class="block-title">RECENT FORM</h2>
+    <div class="form-strip"><i class="w">W</i><i class="w">W</i><i class="w">W</i><i class="w">W</i><i class="w">W</i></div>
+    <ul class="recent-list">
+      <li><div class="recent-row win"><span class="wl">W</span><span class="score">4–2</span><span class="opp">TM</span><span class="when">8/3(月) 00:37</span><span class="chevron">＋</span></div></li>
+      <li><div class="recent-row win"><span class="wl">W</span><span class="score">3–0</span><span class="opp">T1</span><span class="when">8/2(日) 19:06</span><span class="chevron">＋</span></div></li>
+      <li><div class="recent-row win"><span class="wl">W</span><span class="score">3–0</span><span class="opp">DAL</span><span class="when">8/1(土) 20:42</span><span class="chevron">＋</span></div></li>
+    </ul>
+  </section>
+  <section class="block">
+    <h2 class="block-title">STANDINGS<span class="block-sub">Korea Stage 2 2026 · Group Stage</span></h2>
+    <table class="standings">
+      <thead><tr><th class="col-rank">#</th><th class="col-team">TEAM</th><th class="col-num">W</th><th class="col-num">L</th><th class="col-maps">MAPS</th></tr></thead>
+      <tbody>
+        <tr><td class="col-rank">1</td><td class="col-team">CR</td><td class="col-num">7</td><td class="col-num">1</td><td class="col-maps">23-5</td></tr>
+        <tr class="me"><td class="col-rank">1</td><td class="col-team">ZETA</td><td class="col-num">7</td><td class="col-num">1</td><td class="col-maps">23-7</td></tr>
+        <tr><td class="col-rank">3</td><td class="col-team">T1</td><td class="col-num">6</td><td class="col-num">2</td><td class="col-maps">21-8</td></tr>
+        <tr><td class="col-rank">3</td><td class="col-team">FAL</td><td class="col-num">6</td><td class="col-num">2</td><td class="col-maps">18-8</td></tr>
+        <tr class="dim"><td class="col-rank">5</td><td class="col-team">O2B</td><td class="col-num">4</td><td class="col-num">4</td><td class="col-maps">13-14</td></tr>
+        <tr class="dim"><td class="col-rank">6</td><td class="col-team">ZSG</td><td class="col-num">3</td><td class="col-num">5</td><td class="col-maps">11-17</td></tr>
+      </tbody>
+    </table>
+  </section>
+  <footer class="app-foot"><span>最終更新 たった今</span><button class="ghost">今すぐ更新</button></footer>
+</div>
+</div>
+</div>
+
+<div class="col">
+  <h2>4. Steel Gray</h2>
+  <p class="note">少し明るい無彩色。暗すぎず目が疲れにくい。中継感は薄れるが、日常的に開くには一番無難。</p>
+  <div class="pv v4">
+<div class="app">
+  <header class="app-head"><h1>ZETA 番</h1><span class="league">OWCS</span></header>
+  <section class="next">
+    <div class="next-label">NEXT MATCH IN</div>
+    <p class="countdown"><span>2<small>日</small></span><span>05<small>時間</small></span></p>
+    <p class="next-when">10/4(土) 17:00</p>
+    <p class="next-meta">Korea Stage 3 2026 · Group Stage · BO5</p>
+    <div class="next-teams">
+      <div class="side"><div class="badge badge-md"><span class="badge-text">ZETA</span></div><b>ZETA</b></div>
+      <span class="vsx">VS</span>
+      <div class="side right"><b>T1</b><div class="badge badge-md"><span class="badge-text">T1</span></div></div>
+    </div>
+    <a class="watch" href="#">TWITCH で見る</a>
+  </section>
+  <section class="block">
+    <h2 class="block-title">RECENT FORM</h2>
+    <div class="form-strip"><i class="w">W</i><i class="w">W</i><i class="w">W</i><i class="w">W</i><i class="w">W</i></div>
+    <ul class="recent-list">
+      <li><div class="recent-row win"><span class="wl">W</span><span class="score">4–2</span><span class="opp">TM</span><span class="when">8/3(月) 00:37</span><span class="chevron">＋</span></div></li>
+      <li><div class="recent-row win"><span class="wl">W</span><span class="score">3–0</span><span class="opp">T1</span><span class="when">8/2(日) 19:06</span><span class="chevron">＋</span></div></li>
+      <li><div class="recent-row win"><span class="wl">W</span><span class="score">3–0</span><span class="opp">DAL</span><span class="when">8/1(土) 20:42</span><span class="chevron">＋</span></div></li>
+    </ul>
+  </section>
+  <section class="block">
+    <h2 class="block-title">STANDINGS<span class="block-sub">Korea Stage 2 2026 · Group Stage</span></h2>
+    <table class="standings">
+      <thead><tr><th class="col-rank">#</th><th class="col-team">TEAM</th><th class="col-num">W</th><th class="col-num">L</th><th class="col-maps">MAPS</th></tr></thead>
+      <tbody>
+        <tr><td class="col-rank">1</td><td class="col-team">CR</td><td class="col-num">7</td><td class="col-num">1</td><td class="col-maps">23-5</td></tr>
+        <tr class="me"><td class="col-rank">1</td><td class="col-team">ZETA</td><td class="col-num">7</td><td class="col-num">1</td><td class="col-maps">23-7</td></tr>
+        <tr><td class="col-rank">3</td><td class="col-team">T1</td><td class="col-num">6</td><td class="col-num">2</td><td class="col-maps">21-8</td></tr>
+        <tr><td class="col-rank">3</td><td class="col-team">FAL</td><td class="col-num">6</td><td class="col-num">2</td><td class="col-maps">18-8</td></tr>
+        <tr class="dim"><td class="col-rank">5</td><td class="col-team">O2B</td><td class="col-num">4</td><td class="col-num">4</td><td class="col-maps">13-14</td></tr>
+        <tr class="dim"><td class="col-rank">6</td><td class="col-team">ZSG</td><td class="col-num">3</td><td class="col-num">5</td><td class="col-maps">11-17</td></tr>
+      </tbody>
+    </table>
+  </section>
+  <footer class="app-foot"><span>最終更新 たった今</span><button class="ghost">今すぐ更新</button></footer>
+</div>
+</div>
+</div>
+
+<div class="col">
+  <h2>5. Light</h2>
+  <p class="note">白基調。明るい場所で読みやすいが、配信を待つ高揚感は最も薄い。ダークとの切替で持つのが現実的。</p>
+  <div class="pv v5">
+<div class="app">
+  <header class="app-head"><h1>ZETA 番</h1><span class="league">OWCS</span></header>
+  <section class="next">
+    <div class="next-label">NEXT MATCH IN</div>
+    <p class="countdown"><span>2<small>日</small></span><span>05<small>時間</small></span></p>
+    <p class="next-when">10/4(土) 17:00</p>
+    <p class="next-meta">Korea Stage 3 2026 · Group Stage · BO5</p>
+    <div class="next-teams">
+      <div class="side"><div class="badge badge-md"><span class="badge-text">ZETA</span></div><b>ZETA</b></div>
+      <span class="vsx">VS</span>
+      <div class="side right"><b>T1</b><div class="badge badge-md"><span class="badge-text">T1</span></div></div>
+    </div>
+    <a class="watch" href="#">TWITCH で見る</a>
+  </section>
+  <section class="block">
+    <h2 class="block-title">RECENT FORM</h2>
+    <div class="form-strip"><i class="w">W</i><i class="w">W</i><i class="w">W</i><i class="w">W</i><i class="w">W</i></div>
+    <ul class="recent-list">
+      <li><div class="recent-row win"><span class="wl">W</span><span class="score">4–2</span><span class="opp">TM</span><span class="when">8/3(月) 00:37</span><span class="chevron">＋</span></div></li>
+      <li><div class="recent-row win"><span class="wl">W</span><span class="score">3–0</span><span class="opp">T1</span><span class="when">8/2(日) 19:06</span><span class="chevron">＋</span></div></li>
+      <li><div class="recent-row win"><span class="wl">W</span><span class="score">3–0</span><span class="opp">DAL</span><span class="when">8/1(土) 20:42</span><span class="chevron">＋</span></div></li>
+    </ul>
+  </section>
+  <section class="block">
+    <h2 class="block-title">STANDINGS<span class="block-sub">Korea Stage 2 2026 · Group Stage</span></h2>
+    <table class="standings">
+      <thead><tr><th class="col-rank">#</th><th class="col-team">TEAM</th><th class="col-num">W</th><th class="col-num">L</th><th class="col-maps">MAPS</th></tr></thead>
+      <tbody>
+        <tr><td class="col-rank">1</td><td class="col-team">CR</td><td class="col-num">7</td><td class="col-num">1</td><td class="col-maps">23-5</td></tr>
+        <tr class="me"><td class="col-rank">1</td><td class="col-team">ZETA</td><td class="col-num">7</td><td class="col-num">1</td><td class="col-maps">23-7</td></tr>
+        <tr><td class="col-rank">3</td><td class="col-team">T1</td><td class="col-num">6</td><td class="col-num">2</td><td class="col-maps">21-8</td></tr>
+        <tr><td class="col-rank">3</td><td class="col-team">FAL</td><td class="col-num">6</td><td class="col-num">2</td><td class="col-maps">18-8</td></tr>
+        <tr class="dim"><td class="col-rank">5</td><td class="col-team">O2B</td><td class="col-num">4</td><td class="col-num">4</td><td class="col-maps">13-14</td></tr>
+        <tr class="dim"><td class="col-rank">6</td><td class="col-team">ZSG</td><td class="col-num">3</td><td class="col-num">5</td><td class="col-maps">11-17</td></tr>
+      </tbody>
+    </table>
+  </section>
+  <footer class="app-foot"><span>最終更新 たった今</span><button class="ghost">今すぐ更新</button></footer>
+</div>
+</div>
+</div></div>
+</body></html>

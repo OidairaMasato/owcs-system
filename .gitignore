@@ -1,0 +1,22 @@
+# secrets — 絶対にコミットしない
+.env
+.env.*
+!.env.example
+トークン/
+*token*.txt
+*.pem
+*.key
+
+# java
+**/target/
+
+# node
+**/node_modules/
+**/dist/
+
+# ide / os
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
