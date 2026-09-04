@@ -10,6 +10,7 @@ type Tab = "league" | "team";
 
 const TAB_KEY = "owcs.tab";
 const TEAM_KEY = "owcs.teamId";
+const SERIE_KEY = "owcs.serieId";
 
 /** localStorage は環境によって例外を投げるので、必ず包んで使う。 */
 function load(key: string): string | null {
@@ -28,6 +29,12 @@ function save(key: string, value: string): void {
   }
 }
 
+function loadNumber(key: string): number | null {
+  const v = load(key);
+  const n = v != null ? Number(v) : NaN;
+  return Number.isFinite(n) ? n : null;
+}
+
 export default function App() {
   const [data, setData] = useState<League | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -35,10 +42,14 @@ export default function App() {
   const [now, setNow] = useState(() => Date.now());
 
   const [tab, setTab] = useState<Tab>(() => (load(TAB_KEY) === "league" ? "league" : "team"));
-  const [teamId, setTeamId] = useState<number | null>(() => {
-    const v = load(TEAM_KEY);
-    return v ? Number(v) : null;
-  });
+  const [serieId, setSerieId] = useState<number | null>(() => loadNumber(SERIE_KEY));
+
+  /**
+   * 「見たいチーム」の希望。大会を切り替えると出場チームが変わるので、
+   * 希望はそのまま保持し、その大会に居ないときだけ先頭チームで代替する。
+   * こうしないと一度他地域を見ただけで推しチームの記憶が上書きされてしまう。
+   */
+  const [preferredTeamId, setPreferredTeamId] = useState<number | null>(() => loadNumber(TEAM_KEY));
 
   // カウントダウン用に 1 秒ごとに時刻を進める
   useEffect(() => {
@@ -46,34 +57,49 @@ export default function App() {
     return () => clearInterval(t);
   }, []);
 
-  const load_ = useCallback(() => {
-    fetchLeague()
-      .then((d) => {
-        setData(d);
-        setError(null);
-      })
-      .catch((e: Error) => setError(e.message));
-  }, []);
+  const reload = useCallback(
+    (serie: number | null) => {
+      fetchLeague(serie)
+        .then((d) => {
+          setData(d);
+          setError(null);
+          // サーバーが既定の大会を選んだ場合は、それを記憶しておく
+          if (d.serieId != null && d.serieId !== serie) {
+            setSerieId(d.serieId);
+            save(SERIE_KEY, String(d.serieId));
+          }
+        })
+        .catch((e: Error) => setError(e.message));
+    },
+    [],
+  );
 
   useEffect(() => {
-    load_();
+    reload(serieId);
     // 開きっぱなしでも 5 分ごとにキャッシュを読み直す（PandaScore は叩かない）
-    const t = setInterval(load_, 5 * 60 * 1000);
+    const t = setInterval(() => reload(serieId), 5 * 60 * 1000);
     return () => clearInterval(t);
-  }, [load_]);
-
-  // 選択チームが未設定、またはこのステージに居ないチームなら先頭に寄せる
-  useEffect(() => {
-    if (!data || data.teams.length === 0) return;
-    if (teamId != null && data.teams.some((t) => t.id === teamId)) return;
-    setTeamId(data.teams[0].id);
-  }, [data, teamId]);
+  }, [reload, serieId]);
 
   const teams = useMemo(() => teamMap(data?.teams ?? []), [data]);
 
+  const teamId = useMemo(() => {
+    const list = data?.teams ?? [];
+    if (list.length === 0) return null;
+    if (preferredTeamId != null && list.some((t) => t.id === preferredTeamId)) {
+      return preferredTeamId;
+    }
+    return list[0].id;
+  }, [data, preferredTeamId]);
+
   const onSelectTeam = (id: number) => {
-    setTeamId(id);
+    setPreferredTeamId(id);
     save(TEAM_KEY, String(id));
+  };
+
+  const onSelectSerie = (id: number) => {
+    setSerieId(id);
+    save(SERIE_KEY, String(id));
   };
 
   const onTab = (t: Tab) => {
@@ -83,7 +109,7 @@ export default function App() {
 
   const onSync = () => {
     setSyncing(true);
-    syncNow()
+    syncNow(serieId)
       .then((d) => {
         setData(d);
         setError(null);
@@ -96,7 +122,7 @@ export default function App() {
     return (
       <main className="app">
         <p className="error">読み込めませんでした: {error}</p>
-        <button className="ghost" onClick={load_}>
+        <button className="ghost" onClick={() => reload(serieId)}>
           再試行
         </button>
       </main>
@@ -114,7 +140,19 @@ export default function App() {
   return (
     <main className="app">
       <header className="app-head">
-        <h1>OWCS {data.serieName?.split(" ")[0] ?? "Korea"}</h1>
+        <select
+          className="serie-select"
+          value={data.serieId ?? ""}
+          onChange={(e) => onSelectSerie(Number(e.target.value))}
+          aria-label="大会を選ぶ"
+        >
+          {data.series.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </select>
+
         <nav className="tabs">
           <button className={tab === "league" ? "on" : ""} onClick={() => onTab("league")}>
             リーグ

@@ -3,7 +3,8 @@
 OWCS Korea の試合を見逃さないための個人用ダッシュボード。
 **入力欄はひとつも無い。** データは PandaScore から自動で溜まる。
 
-「リーグ」タブでステージ全体の日程と順位表、「チーム」タブで 1 チームを追う。
+上部の大会セレクトで OWCS の全地域と国際大会を切り替え、
+「リーグ」タブでその大会の日程と順位表、「チーム」タブで 1 チームを追う。
 チームは全て対等に扱い、最後に見たチームだけ端末に記憶する。
 
 - 要件: [REQUIREMENTS.md](REQUIREMENTS.md)
@@ -106,8 +107,8 @@ Neon の接続文字列は `postgresql://ユーザー:パスワード@ホスト/
 
 | メソッド | パス | 用途 |
 |---|---|---|
-| GET | `/api/dashboard` | 画面が必要とするデータを 1 リクエストで返す |
-| POST | `/api/sync` | PandaScore から取り込み直してから返す（画面の「今すぐ更新」） |
+| GET | `/api/league?serie={id}` | 画面が必要とするデータを 1 リクエストで返す。`serie` 省略時は開催中・直近の大会 |
+| POST | `/api/sync?serie={id}` | PandaScore から取り込み直してから返す（画面の「今すぐ更新」） |
 
 ## PWA の構成
 
@@ -156,6 +157,32 @@ Unregister した直後にオフラインにすると、キャッシュが空な
 - PandaScore の Overwatch ルート prefix は `/ow`。`/overwatch` は Route not found。
 - 単体取得は `/matches/{id}`（videogame 配下ではない）。
 - OWCS のリーグ名は `OCS`、id は 5223。ZETA の team id は 135271。
+- **大会は地域名で絞らないこと。** `Midseason Championship` や `World Finals` は
+  シリーズ名に地域を含まないため、地域で絞ると国際大会が丸ごと漏れる。開催期間で絞る。
+- ネストしたルート `/ow/series/{id}/matches` は存在しない（Route not found）。
+  `filter[serie_id]` を使う。
+- **「取り込み済みか」を件数で判断しないこと。** 終わった大会を毎回引き直さないための判定に
+  「その大会の試合が DB に 1 件でもあるか」を使ったところ、
+  チーム軸で取り込んでいた頃の部分的なデータを取り込み済みと誤判定し、
+  Midseason Championship が 28 試合中 5 試合しか入らない事故が起きた。
+  いまは `sync_state` に `serie:<id>` の行を残し、**一括取得の記録**で判断している。
+- 1 大会あたりの取得上限は 100 試合（`PER_PAGE`）。
+  現状の最大は Korea Stage の 51 試合だが、超える大会が出たら分割取得が要る。
+- 順位表は選んだ大会のものだけを出す。**他大会の順位表で代替しない。**
+  大会を切り替えられるようにした際、Japan Stage を見ているのに Korea の順位表が出る混入が起きた。
+- 順位表には 2 種類ある。勝敗入り（総当たり戦）と、**順位だけ**（ブラケット戦）。
+  Midseason Championship や World Finals は後者で、`placementOnly` を立てて
+  W / L / MAPS の列を出さずに「FINAL STANDINGS」として見せる。
+- 候補を「名前が総当たりらしいもの」だけに絞ってはいけない。
+  Playoffs が候補から消え、国際大会の最終結果を出せなくなる。優先はするが、残りも候補に残す。
+- 取得済み判定は `sync_state` のキーで行い、**接頭辞に版番号を持たせている**
+  （`serie:v2:` / `standings:v2:`）。選び方のロジックを変えたら版を上げるだけで全大会が作り直される。
+
+### 既知の限界
+
+- **複数グループ制の大会は片方のグループしか出ない**（例: Asia Stage 1 の Group A / B）。
+  1 大会につき順位表を 1 つしか持たない設計のため。並べて出すには構造の変更が要る。
+- 1 大会あたりの取得は 100 試合まで。現状の最大は 51 試合。
 - OWCS Korea は KST 開催で **KST = JST**。時差変換は不要。
 - ログメッセージは ASCII。日本語だと PowerShell(CP932) で文字化けする。
 - PowerShell 5.1 の `Invoke-RestMethod` は charset 無し JSON を ISO-8859-1 と誤認するため

@@ -6,7 +6,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import jp.oidaira.owcs.OwcsProperties;
 import jp.oidaira.owcs.domain.GameResult;
 import jp.oidaira.owcs.domain.Match;
 import jp.oidaira.owcs.domain.StandingRow;
@@ -22,6 +21,7 @@ import jp.oidaira.owcs.web.LeagueDtos.GameRow;
 import jp.oidaira.owcs.web.LeagueDtos.League;
 import jp.oidaira.owcs.web.LeagueDtos.MatchRow;
 import jp.oidaira.owcs.web.LeagueDtos.StandingRowView;
+import jp.oidaira.owcs.web.LeagueDtos.SerieRef;
 import jp.oidaira.owcs.web.LeagueDtos.StandingsView;
 import jp.oidaira.owcs.web.LeagueDtos.TeamView;
 import org.springframework.data.domain.PageRequest;
@@ -35,23 +35,29 @@ public class LeagueService {
     private final TeamRepository teamRepo;
     private final TournamentRepository tournamentRepo;
     private final SyncStateRepository syncRepo;
-    private final OwcsProperties props;
 
     public LeagueService(MatchRepository matchRepo, TeamRepository teamRepo,
-                         TournamentRepository tournamentRepo, SyncStateRepository syncRepo,
-                         OwcsProperties props) {
+                         TournamentRepository tournamentRepo, SyncStateRepository syncRepo) {
         this.matchRepo = matchRepo;
         this.teamRepo = teamRepo;
         this.tournamentRepo = tournamentRepo;
         this.syncRepo = syncRepo;
-        this.props = props;
     }
 
+    /**
+     * @param requestedSerieId 画面で選ばれた大会。null なら既定（開催中・直近）を選ぶ。
+     */
     @Transactional(readOnly = true)
-    public League build() {
-        Integer serieId = currentSerieId();
+    public League build(Integer requestedSerieId) {
+        List<SerieRef> series = listSeries();
+
+        Integer serieId = requestedSerieId != null
+                && series.stream().anyMatch(r -> r.id() == requestedSerieId.intValue())
+                ? requestedSerieId
+                : defaultSerieId();
+
         if (serieId == null) {
-            return new League(null, List.of(), List.of(), null, lastSynced(),
+            return new League(null, null, series, List.of(), List.of(), null, lastSynced(),
                     OffsetDateTime.now(), "まだ試合データがありません");
         }
 
@@ -79,30 +85,47 @@ public class LeagueService {
                 .findFirst()
                 .orElse(standings != null ? standings.serieName() : null);
 
-        String notice = matches.isEmpty() ? "このステージの日程はまだ発表されていません" : null;
+        String notice = matches.isEmpty() ? "この大会の日程はまだ発表されていません" : null;
 
-        return new League(serieName, teams, matches.stream().map(this::toRow).toList(),
+        return new League(serieId, serieName, series, teams,
+                matches.stream().map(this::toRow).toList(),
                 standings, lastSynced(), OffsetDateTime.now(), notice);
     }
 
+    /** 取り込み済みの大会一覧。新しい順。 */
+    private List<SerieRef> listSeries() {
+        List<SerieRef> out = new ArrayList<>();
+        for (Object[] row : matchRepo.listSeries()) {
+            Integer id = (Integer) row[0];
+            String name = (String) row[1];
+            if (id == null) continue;
+            out.add(new SerieRef(id, name != null ? name : "大会 " + id));
+        }
+        return out;
+    }
+
     /**
-     * 表示するシリーズ。
-     * これから試合があるならそのシリーズ、無ければ直近に試合があったシリーズ。
+     * 既定で表示する大会。
+     * これから試合があるならその大会、無ければ直近に試合があった大会。
      * ステージが切り替わると自動で追随する。
      */
-    private Integer currentSerieId() {
-        String keyword = props.regionKeyword();
-        List<Integer> upcoming = matchRepo.findUpcomingSerieIds(keyword, PageRequest.of(0, 1));
+    private Integer defaultSerieId() {
+        List<Integer> upcoming = matchRepo.findUpcomingSerieIds(PageRequest.of(0, 1));
         if (!upcoming.isEmpty()) return upcoming.get(0);
-        List<Integer> recent = matchRepo.findRecentSerieIds(keyword, PageRequest.of(0, 1));
+        List<Integer> recent = matchRepo.findRecentSerieIds(PageRequest.of(0, 1));
         return recent.isEmpty() ? null : recent.get(0);
     }
 
+    /**
+     * 選んだ大会の順位表。
+     *
+     * 他の大会の順位表で代替してはいけない。
+     * 大会を切り替えられるようにしたことで、
+     * 「Japan Stage を見ているのに Korea の順位表が出る」という混入が起きた。
+     * その大会に順位表が無ければ、何も出さないのが正しい。
+     */
     private StandingsView standingsFor(Integer serieId) {
         List<Tournament> found = tournamentRepo.findWithStandings(serieId);
-        if (found.isEmpty()) {
-            found = tournamentRepo.findLatestWithStandings(PageRequest.of(0, 1));
-        }
         if (found.isEmpty()) return null;
 
         Tournament t = found.get(0);
@@ -113,7 +136,9 @@ public class LeagueService {
                     toInt(r.getWins()), toInt(r.getLosses()),
                     toInt(r.getGameWins()), toInt(r.getGameLosses())));
         }
-        return new StandingsView(t.getId(), t.getSerieName(), t.getName(), rows);
+        boolean placementOnly = rows.stream()
+                .allMatch(r -> r.wins() == null && r.losses() == null);
+        return new StandingsView(t.getId(), t.getSerieName(), t.getName(), placementOnly, rows);
     }
 
     private MatchRow toRow(Match m) {

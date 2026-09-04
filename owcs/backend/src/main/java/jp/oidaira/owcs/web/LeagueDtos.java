@@ -49,15 +49,26 @@ public final class LeagueDtos {
             Integer gameLosses) {
     }
 
+    /**
+     * @param placementOnly 勝敗が無く、最終順位だけの表か。
+     *                      ブラケット戦（Playoffs など）はこちらになる。
+     */
     public record StandingsView(
             int tournamentId,
             String serieName,
             String tournamentName,
+            boolean placementOnly,
             List<StandingRowView> rows) {
     }
 
+    /** 大会セレクトの 1 項目。 */
+    public record SerieRef(int id, String name) {
+    }
+
     public record League(
+            Integer serieId,
             String serieName,
+            List<SerieRef> series,
             List<TeamView> teams,
             List<MatchRow> matches,
             StandingsView standings,

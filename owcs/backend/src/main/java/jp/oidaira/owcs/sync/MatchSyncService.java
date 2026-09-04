@@ -37,6 +37,21 @@ public class MatchSyncService {
     static final String JOB_MATCHES = "matches";
     static final String JOB_GAMES = "games";
 
+    /**
+     * 大会ごとの「一括取得済み」印。sync_state に serie:<id> という行を残す。
+     *
+     * 件数（0 件かどうか）で判断してはいけない。
+     * チーム軸で取り込んでいた頃の部分的なデータが残っていると、
+     * 「もう取り込み済み」と誤判定して大会の大半を取りこぼす。
+     * 実際 Midseason Championship が 5 試合しか入らない事故が起きた。
+     */
+    private static String serieKey(int serieId) {
+        return SERIE_KEY_PREFIX + serieId;
+    }
+
+    /** 版を上げると全大会の試合が取り直される。 */
+    private static final String SERIE_KEY_PREFIX = "serie:v2:";
+
     /** 1 シリーズあたりの取得上限。Korea Stage は 50 件強なので十分。 */
     private static final int PER_PAGE = 100;
 
@@ -57,21 +72,45 @@ public class MatchSyncService {
 
     // ---- ジョブ本体 -----------------------------------------------------
 
-    /** 対象シリーズの全試合を取り込む。予定も結果もこれ 1 本で入る。 */
+    /**
+     * 対象シリーズの全試合を取り込む。予定も結果もこれ 1 本で入る。
+     *
+     * 毎回引くのは開催中・直近の大会だけ。
+     * 終わった大会は結果が変わらないので、一括取得の記録が無いとき（初回）だけ引く。
+     * これで対象が 12 大会あってもリクエストは数本で済む。
+     */
     @Transactional
     public void syncMatches() {
         run(JOB_MATCHES, () -> {
+            List<SerieResolver.SerieInfo> hot = series.hotSeries();
             int n = 0;
-            for (int serieId : series.targetSerieIds()) {
-                List<Ps.Match> src = client.matchesInSerie(serieId, PER_PAGE);
+            for (SerieResolver.SerieInfo s : series.targetSeries()) {
+                boolean isHot = hot.contains(s);
+                if (!isHot && isFetched(s.id())) continue;
+
+                List<Ps.Match> src = client.matchesInSerie(s.id(), PER_PAGE);
                 if (src == null) continue;
                 for (Ps.Match m : src) {
                     upsert(m);
                     n++;
                 }
+                markFetched(s.id());
             }
             return n;
         });
+    }
+
+    private boolean isFetched(int serieId) {
+        return syncRepo.findById(serieKey(serieId))
+                .map(st -> st.getLastSuccessAt() != null)
+                .orElse(false);
+    }
+
+    private void markFetched(int serieId) {
+        SyncState st = syncRepo.findById(serieKey(serieId))
+                .orElseGet(() -> new SyncState(serieKey(serieId)));
+        st.succeeded();
+        syncRepo.save(st);
     }
 
     /**

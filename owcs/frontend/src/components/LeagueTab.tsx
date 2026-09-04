@@ -36,10 +36,7 @@ export default function LeagueTab({ league, teams, highlightTeamId, now }: Props
   return (
     <div ref={ref}>
       <section className="block">
-        <h2 className="block-title">
-          SCHEDULE
-          <span className="block-sub">{league.serieName}</span>
-        </h2>
+        <h2 className="block-title">SCHEDULE</h2>
 
         {days.map((d) => (
           <div className="day" key={d.key}>

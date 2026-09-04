@@ -7,22 +7,28 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * 設定値。トークンは環境変数 PANDASCORE_TOKEN から入る。
  * 値をソースや application.yml に直書きしないこと。
  *
- * Phase 2 で「チーム軸」から「シリーズ軸」に変えた。
- * チーム単位で試合を引くと 10 チームで 10 倍のリクエストになるが、
+ * 取り込みの単位は「シリーズ（大会）」。
+ * チーム単位だと 10 チームで 10 倍のリクエストになるが、
  * シリーズ単位なら 1 リクエストで全チーム分が揃う。
+ *
+ * 対象シリーズは地域では絞らない。地域名で絞ると
+ * Midseason Championship や World Finals のような国際大会が漏れるため、期間で絞る。
  */
 @ConfigurationProperties(prefix = "owcs")
 public record OwcsProperties(
         PandaScore pandascore,
         Integer leagueId,
-        String regionKeyword,
-        Integer serieCount,
+        Series series,
         Sync sync) {
 
     public record PandaScore(String baseUrl, String token) {
         public boolean configured() {
             return token != null && !token.isBlank();
         }
+    }
+
+    /** どの大会を追うかの範囲。 */
+    public record Series(Integer pastDays, Integer futureDays, Integer max, Integer hotMarginDays) {
     }
 
     /**

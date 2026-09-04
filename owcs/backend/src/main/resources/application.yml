@@ -28,10 +28,22 @@ owcs:
     token: ${PANDASCORE_TOKEN:}
   # OWCS のリーグ id。PandaScore 上の名前は "OCS"。
   league-id: ${OWCS_LEAGUE_ID:5223}
-  # 追う地域。シリーズ名（例 "Korea Stage 3 2026"）にこの語を含むものを対象にする。
-  region-keyword: ${OWCS_REGION:Korea}
-  # 同時に追うシリーズ数。現在のステージと、その前後をカバーするため 2。
-  serie-count: ${OWCS_SERIE_COUNT:2}
+
+  # 追う大会（シリーズ）の範囲。地域では絞らない。
+  # 地域名で絞ると Midseason Championship や World Finals のような
+  # 国際大会が名前に地域を含まないため丸ごと漏れる。期間で絞る。
+  series:
+    # 終わった大会をどこまで遡って残すか。
+    # シーズン全体（Stage 1 から）を見返せるよう、1 シーズン分を確保する。
+    # 終わった大会は初回に一度取り込むだけなので、広げても継続コストは増えない。
+    past-days: ${OWCS_SERIES_PAST_DAYS:280}
+    # これから始まる大会をどこまで先取りするか
+    future-days: ${OWCS_SERIES_FUTURE_DAYS:120}
+    # 取り込み対象の上限。無料枠を守るための保険
+    max: ${OWCS_SERIES_MAX:24}
+    # この日数だけ前後に広げた期間に「いま」が入る大会は毎回同期する。
+    # それ以外は初回だけ取り込み、以後は放置する（結果が変わらないため）。
+    hot-margin-days: ${OWCS_SERIES_HOT_MARGIN_DAYS:7}
   sync:
     results-cron: ${SYNC_RESULTS_CRON:0 */10 * * * *}
     schedule-cron: ${SYNC_SCHEDULE_CRON:0 5/30 * * * *}

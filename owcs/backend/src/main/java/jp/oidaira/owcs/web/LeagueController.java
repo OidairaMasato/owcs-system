@@ -32,17 +32,17 @@ public class LeagueController {
      * ここで鮮度を見て必要なら取り込んでから返す（十分新しければ何もしない）。
      */
     @GetMapping("/league")
-    public League league() {
+    public League league(@RequestParam(name = "serie", required = false) Integer serieId) {
         coordinator.refreshIfStale();
-        return service.build();
+        return service.build(serieId);
     }
 
     /** 手動で取り込みを走らせる。画面の「今すぐ更新」用。 */
     @PostMapping("/sync")
-    public ResponseEntity<League> syncNow() {
+    public ResponseEntity<League> syncNow(@RequestParam(name = "serie", required = false) Integer serieId) {
         matches.syncMatches();
         matches.syncGameDetails();
         standings.sync();
-        return ResponseEntity.ok(service.build());
+        return ResponseEntity.ok(service.build(serieId));
     }
 }

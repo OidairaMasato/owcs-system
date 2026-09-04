@@ -18,28 +18,34 @@ public interface MatchRepository extends JpaRepository<Match, Integer> {
     List<Match> findBySerie(@Param("serieId") Integer serieId);
 
     /**
-     * これから始まる試合のシリーズ。開催中／直近のステージを特定するのに使う。
-     *
-     * 地域で絞るのは、取り込み方式を変える前のデータ（Midseason Championship など）が
-     * DB に残っていても、画面が対象地域のステージだけを見るようにするため。
+     * 画面の大会セレクトに出す一覧。
+     * [0]=serieId(Integer), [1]=serieName(String), [2]=最終試合日時(OffsetDateTime)。
+     * 別テーブルを作らず、取り込んだ試合から組み立てる。
      */
     @Query("""
+            select m.serieId, m.serieName, max(coalesce(m.beginAt, m.scheduledAt))
+            from Match m
+            where m.serieId is not null
+            group by m.serieId, m.serieName
+            order by max(coalesce(m.beginAt, m.scheduledAt)) desc
+            """)
+    List<Object[]> listSeries();
+
+    /** これから始まる試合のシリーズ。既定で表示する大会を決めるのに使う。 */
+    @Query("""
             select m.serieId from Match m
-            where m.status = 'not_started'
-              and m.serieId is not null
-              and lower(m.serieName) like lower(concat('%', :keyword, '%'))
+            where m.status = 'not_started' and m.serieId is not null
             order by coalesce(m.beginAt, m.scheduledAt) asc
             """)
-    List<Integer> findUpcomingSerieIds(@Param("keyword") String keyword, Pageable pageable);
+    List<Integer> findUpcomingSerieIds(Pageable pageable);
 
     /** 直近に行われた試合のシリーズ。予定が無いときの代替。 */
     @Query("""
             select m.serieId from Match m
             where m.serieId is not null
-              and lower(m.serieName) like lower(concat('%', :keyword, '%'))
             order by coalesce(m.beginAt, m.scheduledAt) desc
             """)
-    List<Integer> findRecentSerieIds(@Param("keyword") String keyword, Pageable pageable);
+    List<Integer> findRecentSerieIds(Pageable pageable);
 
     /** マップ単位の結果が未取得の終了試合。詳細同期の対象。 */
     @Query("""
