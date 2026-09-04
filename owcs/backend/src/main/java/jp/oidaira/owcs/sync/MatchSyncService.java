@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import jp.oidaira.owcs.OwcsProperties;
 import jp.oidaira.owcs.domain.GameResult;
 import jp.oidaira.owcs.domain.Match;
 import jp.oidaira.owcs.domain.StreamLink;
@@ -26,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
  *
  * 設計の要:
  * - 画面リクエスト時に PandaScore を叩かない。取り込みはここだけ。
+ * - シリーズ単位で引く。チーム単位だと 10 チームで 10 倍のリクエストになるが、
+ *   シリーズ単位なら 1 リクエストで全チーム分（50 件程度）が揃う。
  * - 失敗しても画面は前回のキャッシュで動く。エラーは sync_state に残す。
  */
 @Service
@@ -33,35 +34,39 @@ public class MatchSyncService {
 
     private static final Logger log = LoggerFactory.getLogger(MatchSyncService.class);
 
-    static final String JOB_SCHEDULE = "schedule";
-    static final String JOB_RESULTS = "results";
+    static final String JOB_MATCHES = "matches";
     static final String JOB_GAMES = "games";
 
+    /** 1 シリーズあたりの取得上限。Korea Stage は 50 件強なので十分。 */
+    private static final int PER_PAGE = 100;
+
     private final PandaScoreClient client;
+    private final SerieResolver series;
     private final MatchRepository matchRepo;
     private final TeamRepository teamRepo;
     private final SyncStateRepository syncRepo;
-    private final OwcsProperties props;
 
-    public MatchSyncService(PandaScoreClient client, MatchRepository matchRepo, TeamRepository teamRepo,
-                            SyncStateRepository syncRepo, OwcsProperties props) {
+    public MatchSyncService(PandaScoreClient client, SerieResolver series, MatchRepository matchRepo,
+                            TeamRepository teamRepo, SyncStateRepository syncRepo) {
         this.client = client;
+        this.series = series;
         this.matchRepo = matchRepo;
         this.teamRepo = teamRepo;
         this.syncRepo = syncRepo;
-        this.props = props;
     }
 
     // ---- ジョブ本体 -----------------------------------------------------
 
-    /** 予定同期。まだ始まっていない試合を取り込む。 */
+    /** 対象シリーズの全試合を取り込む。予定も結果もこれ 1 本で入る。 */
     @Transactional
-    public void syncSchedule() {
-        run(JOB_SCHEDULE, () -> {
+    public void syncMatches() {
+        run(JOB_MATCHES, () -> {
             int n = 0;
-            for (int teamId : props.teamIds()) {
-                for (Ps.Match src : safe(client.upcoming(teamId, 25))) {
-                    upsert(src);
+            for (int serieId : series.targetSerieIds()) {
+                List<Ps.Match> src = client.matchesInSerie(serieId, PER_PAGE);
+                if (src == null) continue;
+                for (Ps.Match m : src) {
+                    upsert(m);
                     n++;
                 }
             }
@@ -69,26 +74,11 @@ public class MatchSyncService {
         });
     }
 
-    /** 結果同期。進行中と直近の終了試合を取り込む。 */
-    @Transactional
-    public void syncResults() {
-        run(JOB_RESULTS, () -> {
-            int n = 0;
-            for (int teamId : props.teamIds()) {
-                for (Ps.Match src : safe(client.running(teamId, 5))) {
-                    upsert(src);
-                    n++;
-                }
-                for (Ps.Match src : safe(client.past(teamId, 15))) {
-                    upsert(src);
-                    n++;
-                }
-            }
-            return n;
-        });
-    }
-
-    /** マップ単位の結果が欠けている終了試合を、1 回あたり数件ずつ詳細取得で埋める。 */
+    /**
+     * マップ単位の結果が欠けている終了試合を、1 回あたり数件ずつ詳細取得で埋める。
+     * 一覧レスポンスに games が含まれていれば syncMatches で埋まるので、
+     * ここに残るのは取りこぼしだけ。
+     */
     @Transactional
     public void syncGameDetails() {
         run(JOB_GAMES, () -> {
@@ -138,7 +128,7 @@ public class MatchSyncService {
                 src.scheduledAt(), src.beginAt(), src.endAt(),
                 src.leagueId(),
                 src.serie() != null ? src.serie().id() : null,
-                src.serie() != null ? firstNonBlank(src.serie().fullName(), src.serie().name()) : null,
+                src.serie() != null ? src.serie().label() : null,
                 src.tournament() != null ? src.tournament().id() : null,
                 src.tournament() != null ? src.tournament().name() : null,
                 src.matchType(),
@@ -214,14 +204,5 @@ public class MatchSyncService {
             log.warn("sync FAILED: job={} : {}", key, e.toString());
         }
         syncRepo.save(state);
-    }
-
-    private static <T> List<T> safe(List<T> list) {
-        return list != null ? list : List.of();
-    }
-
-    private static String firstNonBlank(String a, String b) {
-        if (a != null && !a.isBlank()) return a;
-        return b;
     }
 }

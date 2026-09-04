@@ -1,36 +1,43 @@
 import { useState } from "react";
-import type { MatchView } from "../types";
+import type { Perspective } from "../derive";
+import type { TeamView } from "../types";
 import { formatDateTime, formatLength } from "../format";
 import FormStrip from "./FormStrip";
 
-type Props = { matches: MatchView[] };
+type Props = {
+  results: Perspective[];
+  teams: Map<number, TeamView>;
+  serieName: string | null;
+};
 
 /** 直近の結果。タップでマップ別の内訳を開く。 */
-export default function RecentStrip({ matches }: Props) {
+export default function ResultList({ results, teams, serieName }: Props) {
   const [openId, setOpenId] = useState<number | null>(null);
 
-  if (matches.length === 0) return null;
+  if (results.length === 0) return null;
 
   return (
     <section className="block">
       <h2 className="block-title">RECENT FORM</h2>
-      <FormStrip matches={matches} />
+      <FormStrip results={results} />
 
       <ul className="recent-list">
-        {matches.map((m) => {
+        {results.map((p) => {
+          const m = p.match;
           const open = openId === m.id;
+          const opponent = p.opponentId != null ? teams.get(p.opponentId) : undefined;
           return (
             <li key={m.id}>
               <button
-                className={`recent-row${m.won ? " win" : " lose"}`}
+                className={`recent-row${p.won ? " win" : " lose"}`}
                 onClick={() => setOpenId(open ? null : m.id)}
                 aria-expanded={open}
               >
-                <span className="wl">{m.won ? "W" : "L"}</span>
+                <span className="wl">{p.won ? "W" : "L"}</span>
                 <span className="score">
-                  {m.scoreUs ?? "-"}–{m.scoreThem ?? "-"}
+                  {p.scoreUs ?? "-"}–{p.scoreThem ?? "-"}
                 </span>
-                <span className="opp">{m.opponent?.shortName ?? "TBD"}</span>
+                <span className="opp">{opponent?.shortName ?? "TBD"}</span>
                 <span className="when">{formatDateTime(m.startsAt)}</span>
                 <span className="chevron">{open ? "－" : "＋"}</span>
               </button>
@@ -38,14 +45,14 @@ export default function RecentStrip({ matches }: Props) {
               {open && (
                 <div className="maps">
                   <p className="maps-serie">
-                    {m.serieName}
+                    {serieName}
                     {m.tournamentName ? ` · ${m.tournamentName}` : ""}
                   </p>
-                  {m.games.length === 0 ? (
+                  {p.games.length === 0 ? (
                     <p className="maps-empty">マップ別の記録がありません</p>
                   ) : (
                     <ol className="maps-list">
-                      {m.games.map((g) => (
+                      {p.games.map((g) => (
                         <li key={g.gameNo} className={g.won ? "map win" : "map lose"}>
                           <span className="map-no">MAP {g.gameNo}</span>
                           <span className="map-wl">{g.won ? "WIN" : "LOSE"}</span>

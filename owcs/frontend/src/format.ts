@@ -61,6 +61,30 @@ export function countdown(iso: string | null, now: number): string {
   return `${min}分`;
 }
 
+/** 例: 17:00 */
+export function formatTime(iso: string | null): string {
+  const d = toDate(iso);
+  if (!d) return "--:--";
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
+/** 例: 今日 10/4(土) / 明日 10/5(日) / 10/6(月) */
+export function formatDay(d: Date | null): string {
+  if (!d) return "日程未定";
+  const label = `${d.getMonth() + 1}/${d.getDate()}(${WEEK[d.getDay()]})`;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(d);
+  target.setHours(0, 0, 0, 0);
+  const diff = Math.round((target.getTime() - today.getTime()) / 86400000);
+
+  if (diff === 0) return `今日 ${label}`;
+  if (diff === 1) return `明日 ${label}`;
+  if (diff === -1) return `昨日 ${label}`;
+  return label;
+}
+
 /** 例: 14:58 */
 export function formatLength(sec: number | null): string {
   if (sec == null) return "";

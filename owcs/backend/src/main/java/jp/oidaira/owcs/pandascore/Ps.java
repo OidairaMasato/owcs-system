@@ -33,7 +33,19 @@ public final class Ps {
             @JsonProperty("streams_list") List<Stream> streamsList) {
     }
 
-    public record Serie(Integer id, @JsonProperty("full_name") String fullName, String name, Integer year) {
+    public record Serie(
+            Integer id,
+            @JsonProperty("full_name") String fullName,
+            String name,
+            Integer year,
+            String slug,
+            @JsonProperty("begin_at") OffsetDateTime beginAt,
+            @JsonProperty("end_at") OffsetDateTime endAt) {
+
+        /** 表示に使う名前。full_name があればそちら。 */
+        public String label() {
+            return fullName != null && !fullName.isBlank() ? fullName : name;
+        }
     }
 
     public record Tournament(

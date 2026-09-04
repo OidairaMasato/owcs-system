@@ -9,32 +9,37 @@ import org.springframework.data.repository.query.Param;
 
 public interface MatchRepository extends JpaRepository<Match, Integer> {
 
-    /** 予定（開始時刻の昇順）。 */
+    /** 指定シリーズの全試合。開始時刻の昇順。 */
     @Query("""
             select m from Match m
-            where (m.teamAId = :teamId or m.teamBId = :teamId)
-              and m.status = 'not_started'
+            where m.serieId = :serieId
             order by coalesce(m.beginAt, m.scheduledAt) asc
             """)
-    List<Match> findUpcoming(@Param("teamId") int teamId, Pageable pageable);
+    List<Match> findBySerie(@Param("serieId") Integer serieId);
 
-    /** 進行中。あればダッシュボードの主役を差し替える。 */
+    /**
+     * これから始まる試合のシリーズ。開催中／直近のステージを特定するのに使う。
+     *
+     * 地域で絞るのは、取り込み方式を変える前のデータ（Midseason Championship など）が
+     * DB に残っていても、画面が対象地域のステージだけを見るようにするため。
+     */
     @Query("""
-            select m from Match m
-            where (m.teamAId = :teamId or m.teamBId = :teamId)
-              and m.status = 'running'
+            select m.serieId from Match m
+            where m.status = 'not_started'
+              and m.serieId is not null
+              and lower(m.serieName) like lower(concat('%', :keyword, '%'))
             order by coalesce(m.beginAt, m.scheduledAt) asc
             """)
-    List<Match> findRunning(@Param("teamId") int teamId);
+    List<Integer> findUpcomingSerieIds(@Param("keyword") String keyword, Pageable pageable);
 
-    /** 直近の結果（開始時刻の降順）。 */
+    /** 直近に行われた試合のシリーズ。予定が無いときの代替。 */
     @Query("""
-            select m from Match m
-            where (m.teamAId = :teamId or m.teamBId = :teamId)
-              and m.status = 'finished'
+            select m.serieId from Match m
+            where m.serieId is not null
+              and lower(m.serieName) like lower(concat('%', :keyword, '%'))
             order by coalesce(m.beginAt, m.scheduledAt) desc
             """)
-    List<Match> findRecentFinished(@Param("teamId") int teamId, Pageable pageable);
+    List<Integer> findRecentSerieIds(@Param("keyword") String keyword, Pageable pageable);
 
     /** マップ単位の結果が未取得の終了試合。詳細同期の対象。 */
     @Query("""

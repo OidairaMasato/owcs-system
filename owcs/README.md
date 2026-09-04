@@ -66,6 +66,39 @@ DevTools の Application タブで登録状況とキャッシュを確認でき�
 （iOS の「ホーム画面に追加」はアイコン付きで可能だが、オフライン動作はしない）。
 フル機能にするには HTTPS でのホスティングが必要。
 
+## 本番環境
+
+| 役割 | サービス | プラン | 備考 |
+|---|---|---|---|
+| アプリ | Render Web Service (Singapore) | Free | Docker。15分の無操作でスリープする |
+| DB | Neon PostgreSQL 16 (Singapore) | Free | 0.5GB / 100 CU時間。5分でゼロにスケール |
+| ソース | GitHub `OidairaMasato/owcs-system` | - | `main` への push で自動デプロイ |
+
+デプロイはリポジトリ直下の `Dockerfile` を使う。
+フロントエンドのビルド成果物を Spring Boot の `static` に入れて**同一オリジンで配信**するため、
+無料枠の「サービス1つ」という制約に収まり、CORS も不要になる。
+
+### Render の環境変数
+
+| Key | 内容 |
+|---|---|
+| `PANDASCORE_TOKEN` | PandaScore のアクセストークン |
+| `SPRING_DATASOURCE_URL` | `jdbc:postgresql://<Neonのホスト>/owcsdb?sslmode=require` |
+| `SPRING_DATASOURCE_USERNAME` | Neon のロール名（`neondb_owner` など） |
+| `SPRING_DATASOURCE_PASSWORD` | Neon のパスワード |
+
+Neon の接続文字列は `postgresql://ユーザー:パスワード@ホスト/owcsdb?...` の形。
+末尾に `&channel_binding=require` が付くが、**JDBC ドライバが解釈できないので削る**。
+
+### スリープへの対処
+
+無料プランは無操作でアプリが停止し、**その間 `@Scheduled` の定期取り込みが動かない**。
+そこで `SyncCoordinator` を用意し、ダッシュボード要求時に前回同期から
+`owcs.sync.max-age`（既定10分）以上経っていればその場で取り込む。
+
+起き上がりに50秒ほどかかるが、Service Worker が前回のデータを即座に表示するので
+体感の待ち時間にはならない。裏で起きたバックエンドが新しいデータを返し、次に開いたときに反映される。
+
 ## API
 
 | メソッド | パス | 用途 |

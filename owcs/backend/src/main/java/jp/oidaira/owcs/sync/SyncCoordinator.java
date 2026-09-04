@@ -55,8 +55,7 @@ public class SyncCoordinator {
 
         try {
             log.info("data is stale; syncing on demand");
-            matches.syncResults();
-            matches.syncSchedule();
+            matches.syncMatches();
             matches.syncGameDetails();
             standings.sync();
         } catch (RuntimeException e) {

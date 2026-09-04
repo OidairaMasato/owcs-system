@@ -1,16 +1,27 @@
-import type { StandingsView } from "../types";
+import type { StandingsView, TeamView } from "../types";
 
-type Props = { standings: StandingsView | null };
+type Props = {
+  standings: StandingsView | null;
+  teams: Map<number, TeamView>;
+  highlightTeamId: number | null;
+  /** 選択チームから離れた順位を沈めるか。リーグ全体を見る画面では沈めない。 */
+  dimFar?: boolean;
+};
 
 /**
- * いま参加しているシリーズの順位表。
- * PandaScore の rank は同率があるので連番ではない（1, 1, 3, 3, 5 ...）。
- * 自分の 2 つ隣までを通常の濃さで出し、それより遠い行は沈める。
+ * 順位表。PandaScore の rank は同率があるので連番ではない（1, 1, 3, 3, 5 ...）。
+ * 選択中のチームの行だけ強調し、そこから離れた順位は沈める。
+ * 「推し」を特別扱いするコードは無く、選択されたチームがそう見えるだけ。
  */
-export default function StandingsTable({ standings }: Props) {
+export default function StandingsTable({
+  standings,
+  teams,
+  highlightTeamId,
+  dimFar = false,
+}: Props) {
   if (!standings || standings.rows.length === 0) return null;
 
-  const myIndex = standings.rows.findIndex((r) => r.me);
+  const myIndex = standings.rows.findIndex((r) => r.teamId === highlightTeamId);
 
   return (
     <section className="block">
@@ -34,11 +45,13 @@ export default function StandingsTable({ standings }: Props) {
         </thead>
         <tbody>
           {standings.rows.map((r, i) => {
-            const far = myIndex >= 0 && Math.abs(i - myIndex) > 2;
+            const me = r.teamId === highlightTeamId;
+            const far = dimFar && myIndex >= 0 && Math.abs(i - myIndex) > 2;
+            const team = teams.get(r.teamId);
             return (
-              <tr key={r.team.id} className={`${r.me ? "me" : ""}${far ? " dim" : ""}`}>
+              <tr key={r.teamId} className={`${me ? "me" : ""}${far ? " dim" : ""}`}>
                 <td className="col-rank">{r.rankNo ?? "-"}</td>
-                <td className="col-team">{r.team.shortName}</td>
+                <td className="col-team">{team?.shortName ?? r.teamId}</td>
                 <td className="col-num">{r.wins ?? "-"}</td>
                 <td className="col-num">{r.losses ?? "-"}</td>
                 <td className="col-maps">

@@ -9,7 +9,6 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME:owcs}
     password: ${SPRING_DATASOURCE_PASSWORD:owcs}
     hikari:
-      # 無料枠は同時接続数が少ないので絞る
       maximum-pool-size: ${DB_POOL_SIZE:3}
   jpa:
     hibernate:
@@ -27,17 +26,18 @@ owcs:
     base-url: https://api.pandascore.co
     # 環境変数 PANDASCORE_TOKEN から読む。値をここに書かないこと。
     token: ${PANDASCORE_TOKEN:}
-  # 追う対象。Phase 2 でカンマ区切りに増やす
-  team-ids: ${OWCS_TEAM_IDS:135271}
-  league-id: 5223
+  # OWCS のリーグ id。PandaScore 上の名前は "OCS"。
+  league-id: ${OWCS_LEAGUE_ID:5223}
+  # 追う地域。シリーズ名（例 "Korea Stage 3 2026"）にこの語を含むものを対象にする。
+  region-keyword: ${OWCS_REGION:Korea}
+  # 同時に追うシリーズ数。現在のステージと、その前後をカバーするため 2。
+  serie-count: ${OWCS_SERIE_COUNT:2}
   sync:
-    # 常時起動しているときの定期取り込み
     results-cron: ${SYNC_RESULTS_CRON:0 */10 * * * *}
     schedule-cron: ${SYNC_SCHEDULE_CRON:0 5/30 * * * *}
     # 無料枠ではアプリがスリープして定期実行が止まるため、
-    # ダッシュボード要求時にこの時間より古ければその場で取り込む。
+    # 画面が要求された時点でこの時間より古ければその場で取り込む。
     max-age: ${SYNC_MAX_AGE:PT10M}
-    # 失敗が続いたときに叩き続けないための最短間隔
     retry-interval: ${SYNC_RETRY_INTERVAL:PT1M}
 
 logging:

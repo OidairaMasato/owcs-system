@@ -1,22 +1,20 @@
-import type { MatchView } from "../types";
+import type { Perspective } from "../derive";
 
-type Props = { matches: MatchView[] };
+type Props = { results: Perspective[] };
 
 /**
  * 直近の勝敗を W / L の帯で並べる。
- * 「5連勝している」ことを数字の羅列ではなく形で見せるのが目的。
+ * 「何連勝しているか」を数字の羅列ではなく形で見せるのが目的。
  * 渡ってくる配列は新しい順なので、左が古くなるように反転する。
  */
-export default function FormStrip({ matches }: Props) {
-  if (matches.length === 0) return null;
-
-  const ordered = [...matches].reverse();
+export default function FormStrip({ results }: Props) {
+  if (results.length === 0) return null;
 
   return (
     <div className="form-strip">
-      {ordered.map((m) => (
-        <i key={m.id} className={m.won ? "w" : "l"} title={`${m.opponent?.shortName ?? ""} ${m.scoreUs ?? "-"}-${m.scoreThem ?? "-"}`}>
-          {m.won ? "W" : "L"}
+      {[...results].reverse().map((p) => (
+        <i key={p.match.id} className={p.won ? "w" : "l"}>
+          {p.won ? "W" : "L"}
         </i>
       ))}
     </div>

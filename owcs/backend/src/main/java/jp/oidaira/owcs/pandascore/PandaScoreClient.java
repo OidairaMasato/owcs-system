@@ -36,30 +36,34 @@ public class PandaScoreClient {
         return configured;
     }
 
-    /** 予定の試合。開始が早い順。 */
-    public List<Ps.Match> upcoming(int teamId, int perPage) {
-        return list(OW + "/matches/upcoming", teamId, perPage, "begin_at");
-    }
-
-    /** 終了した試合。新しい順。 */
-    public List<Ps.Match> past(int teamId, int perPage) {
-        return list(OW + "/matches/past", teamId, perPage, "-begin_at");
-    }
-
-    /** 進行中の試合。 */
-    public List<Ps.Match> running(int teamId, int perPage) {
-        return list(OW + "/matches/running", teamId, perPage, "begin_at");
-    }
-
-    private List<Ps.Match> list(String path, int teamId, int perPage, String sort) {
+    /**
+     * シリーズ配下の全試合。これ 1 本で全チーム分が揃う。
+     *
+     * 注意: ネストしたルート /ow/series/{id}/matches は存在しない（Route not found）。
+     * filter[serie_id] を使うこと。
+     */
+    public List<Ps.Match> matchesInSerie(int serieId, int perPage) {
         return rest.get()
-                .uri(uri -> uri.path(path)
-                        .queryParam("filter[opponent_id]", teamId)
+                .uri(uri -> uri.path(OW + "/matches")
+                        .queryParam("filter[serie_id]", serieId)
                         .queryParam("per_page", perPage)
-                        .queryParam("sort", sort)
+                        .queryParam("sort", "begin_at")
                         .build())
                 .retrieve()
                 .body(new ParameterizedTypeReference<List<Ps.Match>>() {
+                });
+    }
+
+    /** リーグ配下のシリーズ一覧（地域 × ステージ）。新しい順。 */
+    public List<Ps.Serie> series(int leagueId, int perPage) {
+        return rest.get()
+                .uri(uri -> uri.path(OW + "/series")
+                        .queryParam("filter[league_id]", leagueId)
+                        .queryParam("per_page", perPage)
+                        .queryParam("sort", "-begin_at")
+                        .build())
+                .retrieve()
+                .body(new ParameterizedTypeReference<List<Ps.Serie>>() {
                 });
     }
 

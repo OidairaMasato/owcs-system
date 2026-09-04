@@ -5,36 +5,35 @@ export type TeamView = {
   imageUrl: string | null;
 };
 
-export type GameView = {
+export type GameRow = {
   gameNo: number;
-  won: boolean;
+  winnerId: number | null;
   lengthSec: number | null;
 };
 
-export type MatchView = {
+export type MatchRow = {
   id: number;
   name: string;
   status: "not_started" | "running" | "finished" | string;
   startsAt: string | null;
-  serieName: string | null;
   tournamentName: string | null;
-  opponent: TeamView | null;
-  scoreUs: number | null;
-  scoreThem: number | null;
-  won: boolean | null;
+  teamAId: number | null;
+  teamBId: number | null;
+  scoreA: number | null;
+  scoreB: number | null;
+  winnerId: number | null;
   bestOf: number | null;
   streamUrl: string | null;
-  games: GameView[];
+  games: GameRow[];
 };
 
 export type StandingRowView = {
   rankNo: number | null;
-  team: TeamView;
+  teamId: number;
   wins: number | null;
   losses: number | null;
   gameWins: number | null;
   gameLosses: number | null;
-  me: boolean;
 };
 
 export type StandingsView = {
@@ -44,12 +43,10 @@ export type StandingsView = {
   rows: StandingRowView[];
 };
 
-export type Dashboard = {
-  team: TeamView;
-  live: MatchView | null;
-  next: MatchView | null;
-  upcoming: MatchView[];
-  recent: MatchView[];
+export type League = {
+  serieName: string | null;
+  teams: TeamView[];
+  matches: MatchRow[];
   standings: StandingsView | null;
   lastSyncedAt: string | null;
   serverTime: string;
