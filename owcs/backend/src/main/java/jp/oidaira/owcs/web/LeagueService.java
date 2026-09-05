@@ -1,9 +1,16 @@
 package jp.oidaira.owcs.web;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import jp.oidaira.owcs.domain.GameResult;
@@ -19,12 +26,15 @@ import jp.oidaira.owcs.repo.TeamLogoRepository;
 import jp.oidaira.owcs.repo.TeamRepository;
 import jp.oidaira.owcs.repo.TournamentRepository;
 import jp.oidaira.owcs.web.LeagueDtos.GameRow;
+import jp.oidaira.owcs.web.LeagueDtos.HeadToHead;
+import jp.oidaira.owcs.web.LeagueDtos.HeadToHeadRow;
 import jp.oidaira.owcs.web.LeagueDtos.League;
 import jp.oidaira.owcs.web.LeagueDtos.MatchRow;
 import jp.oidaira.owcs.web.LeagueDtos.StandingRowView;
 import jp.oidaira.owcs.web.LeagueDtos.SerieRef;
 import jp.oidaira.owcs.web.LeagueDtos.StandingsView;
 import jp.oidaira.owcs.web.LeagueDtos.TeamView;
+import jp.oidaira.owcs.web.LeagueDtos.Today;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -97,6 +107,93 @@ public class LeagueService {
                 standings, lastSynced(), OffsetDateTime.now(), notice);
     }
 
+    /**
+     * 今日前後の全試合。大会を選ばずに「今日 OWCS で何があるか」を見るための入口。
+     * 昨日の朝から明後日の朝までを JST で切る。
+     */
+    @Transactional(readOnly = true)
+    public Today today() {
+        ZoneId jst = ZoneId.of("Asia/Tokyo");
+        ZonedDateTime startOfToday = ZonedDateTime.now(jst).truncatedTo(ChronoUnit.DAYS);
+        OffsetDateTime from = startOfToday.minusDays(1).toOffsetDateTime();
+        OffsetDateTime to = startOfToday.plusDays(2).toOffsetDateTime();
+
+        List<Match> matches = matchRepo.findBetween(from, to);
+
+        Set<Integer> teamIds = new LinkedHashSet<>();
+        for (Match m : matches) {
+            if (m.getTeamAId() != null) teamIds.add(m.getTeamAId());
+            if (m.getTeamBId() != null) teamIds.add(m.getTeamBId());
+        }
+        Set<Integer> withLogo = new java.util.HashSet<>(logoRepo.findAllTeamIds());
+        List<TeamView> teams = teamRepo.findAllById(teamIds).stream()
+                .map(t -> toView(t, withLogo))
+                .toList();
+
+        return new Today(teams, matches.stream().map(this::toRow).toList(),
+                lastSynced(), OffsetDateTime.now());
+    }
+
+    /**
+     * 対戦相手別の通算成績。大会をまたいで集計する。
+     * 「ZETA は CR に通算何勝何敗か」という、1 大会だけでは分からない見方を出す。
+     */
+    @Transactional(readOnly = true)
+    public HeadToHead headToHead(int teamId) {
+        List<Match> matches = matchRepo.findFinishedForTeam(teamId);
+
+        Map<Integer, int[]> tally = new LinkedHashMap<>();   // [勝, 敗, マップ勝, マップ敗]
+        Map<Integer, OffsetDateTime> lastPlayed = new HashMap<>();
+        int wins = 0;
+        int losses = 0;
+
+        for (Match m : matches) {
+            Integer opponentId = m.opponentOf(teamId).orElse(null);
+            if (opponentId == null || m.getWinnerId() == null) continue;
+
+            boolean won = m.getWinnerId() == teamId;
+            if (won) wins++; else losses++;
+
+            int[] t = tally.computeIfAbsent(opponentId, k -> new int[4]);
+            if (won) t[0]++; else t[1]++;
+
+            Short us = m.scoreOf(teamId);
+            Short them = m.scoreAgainst(teamId);
+            if (us != null) t[2] += us;
+            if (them != null) t[3] += them;
+
+            OffsetDateTime at = m.startsAt();
+            if (at != null) {
+                OffsetDateTime cur = lastPlayed.get(opponentId);
+                if (cur == null || at.isAfter(cur)) lastPlayed.put(opponentId, at);
+            }
+        }
+
+        Set<Integer> withLogo = new java.util.HashSet<>(logoRepo.findAllTeamIds());
+        Map<Integer, Team> teamById = new HashMap<>();
+        teamRepo.findAllById(tally.keySet()).forEach(t -> teamById.put(t.getId(), t));
+
+        List<HeadToHeadRow> rows = new ArrayList<>();
+        for (Map.Entry<Integer, int[]> e : tally.entrySet()) {
+            Team opp = teamById.get(e.getKey());
+            if (opp == null) continue;
+            int[] t = e.getValue();
+            rows.add(new HeadToHeadRow(toView(opp, withLogo), t[0], t[1], t[2], t[3],
+                    lastPlayed.get(e.getKey())));
+        }
+        // 対戦数の多い順、次に直近に当たった順
+        rows.sort(Comparator
+                .comparingInt((HeadToHeadRow r) -> -(r.wins() + r.losses()))
+                .thenComparing(HeadToHeadRow::lastPlayedAt,
+                        Comparator.nullsLast(Comparator.reverseOrder())));
+
+        Team me = teamRepo.findById(teamId).orElse(null);
+        TeamView meView = me != null ? toView(me, withLogo)
+                : new TeamView(teamId, "TBD", "TBD", null);
+
+        return new HeadToHead(meView, wins, losses, rows);
+    }
+
     /** 取り込み済みの大会一覧。新しい順。 */
     private List<SerieRef> listSeries() {
         List<SerieRef> out = new ArrayList<>();
@@ -156,6 +253,7 @@ public class LeagueService {
                 m.getName(),
                 m.getStatus(),
                 m.startsAt(),
+                m.getSerieName(),
                 m.getTournamentName(),
                 m.getTeamAId(),
                 m.getTeamBId(),

@@ -4,7 +4,9 @@ import jp.oidaira.owcs.sync.LogoSyncService;
 import jp.oidaira.owcs.sync.MatchSyncService;
 import jp.oidaira.owcs.sync.StandingsSyncService;
 import jp.oidaira.owcs.sync.SyncCoordinator;
+import jp.oidaira.owcs.web.LeagueDtos.HeadToHead;
 import jp.oidaira.owcs.web.LeagueDtos.League;
+import jp.oidaira.owcs.web.LeagueDtos.Today;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,6 +41,22 @@ public class LeagueController {
     public League league(@RequestParam(name = "serie", required = false) Integer serieId) {
         coordinator.refreshIfStale();
         return service.build(serieId);
+    }
+
+    /**
+     * 今日前後の全試合。大会を選ばずに「今日 OWCS で何があるか」を見るための入口。
+     * 大会をまたぐので、どの大会の試合かも一緒に返す。
+     */
+    @GetMapping("/today")
+    public Today today() {
+        coordinator.refreshIfStale();
+        return service.today();
+    }
+
+    /** 対戦相手別の通算成績。大会をまたいで集計する。 */
+    @GetMapping("/team/{teamId}/head-to-head")
+    public HeadToHead headToHead(@PathVariable int teamId) {
+        return service.headToHead(teamId);
     }
 
     /** 手動で取り込みを走らせる。画面の「今すぐ更新」用。 */

@@ -29,6 +29,7 @@ public final class LeagueDtos {
             String name,
             String status,
             OffsetDateTime startsAt,
+            String serieName,
             String tournamentName,
             Integer teamAId,
             Integer teamBId,
@@ -63,6 +64,31 @@ public final class LeagueDtos {
 
     /** 大会セレクトの 1 項目。 */
     public record SerieRef(int id, String name) {
+    }
+
+    /** 「今日の試合」タブ。大会をまたぐので serieName を見せる。 */
+    public record Today(
+            List<TeamView> teams,
+            List<MatchRow> matches,
+            OffsetDateTime lastSyncedAt,
+            OffsetDateTime serverTime) {
+    }
+
+    /** 対戦相手別の通算成績。 */
+    public record HeadToHeadRow(
+            TeamView opponent,
+            int wins,
+            int losses,
+            int mapWins,
+            int mapLosses,
+            OffsetDateTime lastPlayedAt) {
+    }
+
+    public record HeadToHead(
+            TeamView team,
+            int wins,
+            int losses,
+            List<HeadToHeadRow> rows) {
     }
 
     public record League(

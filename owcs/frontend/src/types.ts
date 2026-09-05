@@ -16,6 +16,7 @@ export type MatchRow = {
   name: string;
   status: "not_started" | "running" | "finished" | string;
   startsAt: string | null;
+  serieName: string | null;
   tournamentName: string | null;
   teamAId: number | null;
   teamBId: number | null;
@@ -48,6 +49,29 @@ export type StandingsView = {
 export type SerieRef = {
   id: number;
   name: string;
+};
+
+export type Today = {
+  teams: TeamView[];
+  matches: MatchRow[];
+  lastSyncedAt: string | null;
+  serverTime: string;
+};
+
+export type HeadToHeadRow = {
+  opponent: TeamView;
+  wins: number;
+  losses: number;
+  mapWins: number;
+  mapLosses: number;
+  lastPlayedAt: string | null;
+};
+
+export type HeadToHead = {
+  team: TeamView;
+  wins: number;
+  losses: number;
+  rows: HeadToHeadRow[];
 };
 
 export type League = {

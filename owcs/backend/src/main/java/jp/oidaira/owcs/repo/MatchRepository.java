@@ -1,5 +1,6 @@
 package jp.oidaira.owcs.repo;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import jp.oidaira.owcs.domain.Match;
 import org.springframework.data.domain.Pageable;
@@ -46,6 +47,34 @@ public interface MatchRepository extends JpaRepository<Match, Integer> {
             order by coalesce(m.beginAt, m.scheduledAt) desc
             """)
     List<Integer> findRecentSerieIds(Pageable pageable);
+
+    /** 期間内の全試合（大会をまたぐ）。「今日の試合」に使う。 */
+    @Query("""
+            select m from Match m
+            where coalesce(m.beginAt, m.scheduledAt) >= :from
+              and coalesce(m.beginAt, m.scheduledAt) < :to
+            order by coalesce(m.beginAt, m.scheduledAt) asc
+            """)
+    List<Match> findBetween(@Param("from") OffsetDateTime from, @Param("to") OffsetDateTime to);
+
+    /** 指定チームの終了した全試合（大会をまたぐ）。対戦相手別の通算成績に使う。 */
+    @Query("""
+            select m from Match m
+            where m.status = 'finished'
+              and (m.teamAId = :teamId or m.teamBId = :teamId)
+            order by coalesce(m.beginAt, m.scheduledAt) asc
+            """)
+    List<Match> findFinishedForTeam(@Param("teamId") Integer teamId);
+
+    /** 指定チームの全試合（状態を問わない・大会をまたぐ）。カレンダー配信に使う。 */
+    @Query("""
+            select m from Match m
+            where (m.teamAId = :teamId or m.teamBId = :teamId)
+              and coalesce(m.beginAt, m.scheduledAt) >= :since
+            order by coalesce(m.beginAt, m.scheduledAt) asc
+            """)
+    List<Match> findForTeamSince(@Param("teamId") Integer teamId,
+                                 @Param("since") OffsetDateTime since);
 
     /** マップ単位の結果が未取得の終了試合。詳細同期の対象。 */
     @Query("""

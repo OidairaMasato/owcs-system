@@ -5,8 +5,9 @@ import { teamMap } from "./derive";
 import { relativePast } from "./format";
 import LeagueTab from "./components/LeagueTab";
 import TeamTab from "./components/TeamTab";
+import TodayTab from "./components/TodayTab";
 
-type Tab = "league" | "team";
+type Tab = "today" | "league" | "team";
 
 const TAB_KEY = "owcs.tab";
 const TEAM_KEY = "owcs.teamId";
@@ -41,7 +42,10 @@ export default function App() {
   const [syncing, setSyncing] = useState(false);
   const [now, setNow] = useState(() => Date.now());
 
-  const [tab, setTab] = useState<Tab>(() => (load(TAB_KEY) === "league" ? "league" : "team"));
+  const [tab, setTab] = useState<Tab>(() => {
+    const v = load(TAB_KEY);
+    return v === "league" || v === "today" ? v : "team";
+  });
   const [serieId, setSerieId] = useState<number | null>(() => loadNumber(SERIE_KEY));
 
   /**
@@ -140,20 +144,28 @@ export default function App() {
   return (
     <main className="app">
       <header className="app-head">
-        <select
-          className="serie-select"
-          value={data.serieId ?? ""}
-          onChange={(e) => onSelectSerie(Number(e.target.value))}
-          aria-label="大会を選ぶ"
-        >
-          {data.series.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </select>
+        {/* 「今日」タブは大会に依存しないので、セレクトの代わりにアプリ名を出す */}
+        {tab === "today" ? (
+          <span className="app-title">OWCS</span>
+        ) : (
+          <select
+            className="serie-select"
+            value={data.serieId ?? ""}
+            onChange={(e) => onSelectSerie(Number(e.target.value))}
+            aria-label="大会を選ぶ"
+          >
+            {data.series.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        )}
 
         <nav className="tabs">
+          <button className={tab === "today" ? "on" : ""} onClick={() => onTab("today")}>
+            今日
+          </button>
           <button className={tab === "league" ? "on" : ""} onClick={() => onTab("league")}>
             リーグ
           </button>
@@ -163,9 +175,11 @@ export default function App() {
         </nav>
       </header>
 
-      {tab === "league" ? (
+      {tab === "today" && <TodayTab />}
+      {tab === "league" && (
         <LeagueTab league={data} teams={teams} highlightTeamId={teamId} now={now} />
-      ) : (
+      )}
+      {tab === "team" && (
         <TeamTab
           league={data}
           teams={teams}

@@ -2,6 +2,8 @@ import { useMemo } from "react";
 import type { League, TeamView } from "../types";
 import { sliceForTeam } from "../derive";
 import TeamPicker from "./TeamPicker";
+import CalendarLink from "./CalendarLink";
+import HeadToHeadTable from "./HeadToHeadTable";
 import NextMatchCard from "./NextMatchCard";
 import ResultList from "./ResultList";
 import UpcomingList from "./UpcomingList";
@@ -38,7 +40,9 @@ export default function TeamTab({ league, teams, selectedId, onSelect, now }: Pr
             serieName={league.serieName}
             notice={league.notice}
           />
+          <CalendarLink team={me} />
           <ResultList results={slice.recent} teams={teams} serieName={league.serieName} />
+          <HeadToHeadTable teamId={selectedId} />
           <UpcomingList items={slice.upcoming} teams={teams} />
           <StandingsTable
             standings={league.standings}

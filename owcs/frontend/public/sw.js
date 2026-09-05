@@ -25,7 +25,7 @@
  * そのため cache.match には必ず { ignoreVary: true } を渡す。
  */
 
-const VERSION = "v4";
+const VERSION = "v5";
 const SHELL = `shell-${VERSION}`;
 const DATA = `data-${VERSION}`;
 
