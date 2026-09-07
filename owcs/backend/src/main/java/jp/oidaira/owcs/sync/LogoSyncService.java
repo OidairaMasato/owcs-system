@@ -92,7 +92,7 @@ public class LogoSyncService {
             // 既にエンコード済みの URL を二重エンコードすることがある。
             ResponseEntity<byte[]> res = rest.get()
                     .uri(java.net.URI.create(url))
-                    .header("User-Agent", "owcs-korea-dashboard/1.0")
+                    .header("User-Agent", "owcs-watch/1.0")
                     .retrieve()
                     .toEntity(byte[].class);
 

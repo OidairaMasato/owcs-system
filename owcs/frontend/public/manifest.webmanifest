@@ -1,7 +1,7 @@
 {
-  "name": "OWCS Korea",
-  "short_name": "OWCS KR",
-  "description": "OWCS Korea の日程・結果・順位を見逃さないためのダッシュボード",
+  "name": "OWCS Watch",
+  "short_name": "OWCS",
+  "description": "OWCS の日程・結果・順位を見逃さないためのダッシュボード。全地域と国際大会に対応。",
   "lang": "ja",
   "start_url": "/",
   "scope": "/",

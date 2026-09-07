@@ -67,7 +67,7 @@ public class CalendarController {
         StringBuilder sb = new StringBuilder();
         sb.append("BEGIN:VCALENDAR\r\n")
                 .append("VERSION:2.0\r\n")
-                .append("PRODID:-//owcs-korea//dashboard//JA\r\n")
+                .append("PRODID:-//owcs-watch//dashboard//JA\r\n")
                 .append("CALSCALE:GREGORIAN\r\n")
                 .append("METHOD:PUBLISH\r\n")
                 .append("X-WR-CALNAME:").append(escape(team.shortName() + " — OWCS")).append("\r\n")
@@ -97,7 +97,8 @@ public class CalendarController {
             }
 
             sb.append("BEGIN:VEVENT\r\n")
-                    .append("UID:owcs-match-").append(m.getId()).append("@owcs-korea\r\n")
+                    // UID は購読側が「同じ予定」と見なす鍵なので、公開後は変えてはいけない
+                    .append("UID:owcs-match-").append(m.getId()).append("@owcs-watch\r\n")
                     .append("DTSTAMP:").append(stamp).append("\r\n")
                     .append("DTSTART:").append(start.format(UTC)).append("\r\n")
                     .append("DTEND:").append(end.format(UTC)).append("\r\n")
