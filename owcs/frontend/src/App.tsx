@@ -3,11 +3,13 @@ import { fetchLeague, syncNow } from "./api";
 import type { League } from "./types";
 import { teamMap } from "./derive";
 import { relativePast } from "./format";
+import { hasLiveMatch, useLiveRefresh } from "./live";
 import LeagueTab from "./components/LeagueTab";
+import RankingTab from "./components/RankingTab";
 import TeamTab from "./components/TeamTab";
 import TodayTab from "./components/TodayTab";
 
-type Tab = "today" | "league" | "team";
+type Tab = "today" | "league" | "team" | "rank";
 
 const TAB_KEY = "owcs.tab";
 const TEAM_KEY = "owcs.teamId";
@@ -44,7 +46,7 @@ export default function App() {
 
   const [tab, setTab] = useState<Tab>(() => {
     const v = load(TAB_KEY);
-    return v === "league" || v === "today" ? v : "team";
+    return v === "league" || v === "today" || v === "rank" ? v : "team";
   });
   const [serieId, setSerieId] = useState<number | null>(() => loadNumber(SERIE_KEY));
 
@@ -84,6 +86,10 @@ export default function App() {
     const t = setInterval(() => reload(serieId), 5 * 60 * 1000);
     return () => clearInterval(t);
   }, [reload, serieId]);
+
+  // 試合中は 60 秒ごとに読み直して、スコアがその場で動くようにする
+  const reloadCurrent = useCallback(() => reload(serieId), [reload, serieId]);
+  useLiveRefresh(hasLiveMatch(data?.matches ?? [], now), reloadCurrent);
 
   const teams = useMemo(() => teamMap(data?.teams ?? []), [data]);
 
@@ -144,8 +150,8 @@ export default function App() {
   return (
     <main className="app">
       <header className="app-head">
-        {/* 「今日」タブは大会に依存しないので、セレクトの代わりにアプリ名を出す */}
-        {tab === "today" ? (
+        {/* 「今日」「通算」タブは大会に依存しないので、セレクトの代わりにアプリ名を出す */}
+        {tab === "today" || tab === "rank" ? (
           <span className="app-title">OWCS</span>
         ) : (
           <select
@@ -172,10 +178,14 @@ export default function App() {
           <button className={tab === "team" ? "on" : ""} onClick={() => onTab("team")}>
             チーム
           </button>
+          <button className={tab === "rank" ? "on" : ""} onClick={() => onTab("rank")}>
+            通算
+          </button>
         </nav>
       </header>
 
       {tab === "today" && <TodayTab />}
+      {tab === "rank" && <RankingTab />}
       {tab === "league" && (
         <LeagueTab league={data} teams={teams} highlightTeamId={teamId} now={now} />
       )}

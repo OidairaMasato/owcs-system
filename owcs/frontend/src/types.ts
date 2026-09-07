@@ -74,6 +74,26 @@ export type HeadToHead = {
   rows: HeadToHeadRow[];
 };
 
+export type RankingRow = {
+  team: TeamView;
+  /** Elo レーティング。初期値 1500 */
+  rating: number;
+  /** 試合数が少なく、レーティングがまだ当てにならない */
+  provisional: boolean;
+  played: number;
+  wins: number;
+  losses: number;
+  mapWins: number;
+  mapLosses: number;
+};
+
+export type Rankings = {
+  year: number;
+  /** 集計できる年（新しい順） */
+  years: number[];
+  rows: RankingRow[];
+};
+
 export type League = {
   serieId: number | null;
   serieName: string | null;

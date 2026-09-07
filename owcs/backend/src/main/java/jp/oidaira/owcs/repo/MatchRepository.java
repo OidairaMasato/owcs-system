@@ -76,6 +76,31 @@ public interface MatchRepository extends JpaRepository<Match, Integer> {
     List<Match> findForTeamSince(@Param("teamId") Integer teamId,
                                  @Param("since") OffsetDateTime since);
 
+    /**
+     * 「いま試合中かもしれない」時間帯にある試合の数。
+     * 0 でなければ取り込み間隔を短くする（LIVE スコア用）。
+     *
+     * status だけで判定してはいけない。取り込みが止まっている間は
+     * 実際には始まっている試合も not_started のままだからである。
+     * 開始予定時刻の窓で見る。
+     */
+    @Query("""
+            select count(m) from Match m
+            where m.status in ('not_started', 'running')
+              and coalesce(m.beginAt, m.scheduledAt) >= :from
+              and coalesce(m.beginAt, m.scheduledAt) <= :to
+            """)
+    long countInPlayWindow(@Param("from") OffsetDateTime from,
+                           @Param("to") OffsetDateTime to);
+
+    /** 終了した全試合（大会をまたぐ）。通算ランキングの集計に使う。 */
+    @Query("""
+            select m from Match m
+            where m.status = 'finished'
+            order by coalesce(m.beginAt, m.scheduledAt) asc
+            """)
+    List<Match> findAllFinished();
+
     /** マップ単位の結果が未取得の終了試合。詳細同期の対象。 */
     @Query("""
             select m from Match m

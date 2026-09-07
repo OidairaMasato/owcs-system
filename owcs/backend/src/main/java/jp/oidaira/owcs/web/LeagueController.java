@@ -6,6 +6,7 @@ import jp.oidaira.owcs.sync.StandingsSyncService;
 import jp.oidaira.owcs.sync.SyncCoordinator;
 import jp.oidaira.owcs.web.LeagueDtos.HeadToHead;
 import jp.oidaira.owcs.web.LeagueDtos.League;
+import jp.oidaira.owcs.web.LeagueDtos.Rankings;
 import jp.oidaira.owcs.web.LeagueDtos.Today;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -57,6 +58,15 @@ public class LeagueController {
     @GetMapping("/team/{teamId}/head-to-head")
     public HeadToHead headToHead(@PathVariable int teamId) {
         return service.headToHead(teamId);
+    }
+
+    /**
+     * 年間の通算ランキング。取り込み済みの全大会を横断する。
+     * year を省略すると、試合があった最も新しい年を返す。
+     */
+    @GetMapping("/rankings")
+    public Rankings rankings(@RequestParam(name = "year", required = false) Integer year) {
+        return service.rankings(year);
     }
 
     /** 手動で取り込みを走らせる。画面の「今すぐ更新」用。 */

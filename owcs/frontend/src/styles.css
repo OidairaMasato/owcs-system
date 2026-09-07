@@ -876,3 +876,70 @@ body {
   text-decoration: none;
   white-space: nowrap;
 }
+
+/* ---- 通算ランキング ---- */
+
+/* 年の切り替え。チーム選択と同じ見た目に揃える */
+.year-picker {
+  display: flex;
+  gap: 6px;
+  padding: 0 0 14px;
+}
+
+.year-picker button {
+  flex: none;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--fg-dim);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  padding: 5px 12px;
+  cursor: pointer;
+}
+
+.year-picker button.on {
+  border-color: var(--accent);
+  color: var(--fg);
+}
+
+/* チーム名はロゴと並べる。長い略称でも崩れないよう flex で組む */
+.standings.ranking .col-team {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.standings.ranking .rk-name {
+  font-style: italic;
+  font-weight: 700;
+  color: var(--fg);
+}
+
+/* レーティングがこの表の主役なので、数字を一番強く出す */
+.standings.ranking .col-rating {
+  width: 58px;
+  font-variant-numeric: tabular-nums;
+  font-style: italic;
+  font-weight: 800;
+  color: var(--fg);
+}
+
+.standings.ranking tr.dim .col-rating {
+  font-weight: 700;
+}
+
+.rk-note {
+  margin: 12px 0 0;
+  font-size: 10.5px;
+  line-height: 1.7;
+  color: var(--fg-dim);
+}
+
+/* 上位 3 チームだけ順位を立たせる。表全体が同じ濃さだと目が止まらない */
+.standings.ranking tbody tr:nth-child(-n + 3) .col-rank {
+  color: var(--accent);
+  font-weight: 800;
+}

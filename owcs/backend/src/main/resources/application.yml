@@ -51,6 +51,9 @@ owcs:
     # 画面が要求された時点でこの時間より古ければその場で取り込む。
     max-age: ${SYNC_MAX_AGE:PT10M}
     retry-interval: ${SYNC_RETRY_INTERVAL:PT1M}
+    # 試合中はスコアが数分で変わるので、この短い間隔で取り込み直す。
+    # 対象は試合結果だけで、順位表とロゴまでは毎分叩かない。
+    live-max-age: ${SYNC_LIVE_MAX_AGE:PT1M}
 
 logging:
   level:

@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { Today } from "../types";
 import { teamMap } from "../derive";
 import { formatDay, formatTime, streamLabel } from "../format";
 import { fetchToday } from "../api";
+import { hasLiveMatch, useLiveRefresh } from "../live";
 
 /**
  * 大会を選ばずに「いま OWCS で何があるか」を見るタブ。
@@ -12,7 +13,7 @@ export default function TodayTab() {
   const [data, setData] = useState<Today | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const reload = useCallback(() => {
     fetchToday()
       .then((d) => {
         setData(d);
@@ -20,6 +21,13 @@ export default function TodayTab() {
       })
       .catch((e: Error) => setError(e.message));
   }, []);
+
+  useEffect(() => {
+    reload();
+  }, [reload]);
+
+  // 試合中は 60 秒ごとに読み直す。地域をまたぐので、ここが一番 LIVE に当たりやすい
+  useLiveRefresh(hasLiveMatch(data?.matches ?? [], Date.now()), reload);
 
   if (error) return <p className="error">読み込めませんでした: {error}</p>;
   if (!data) return <p className="loading">読み込み中…</p>;

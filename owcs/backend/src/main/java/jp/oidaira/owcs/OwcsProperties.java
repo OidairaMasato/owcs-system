@@ -37,7 +37,10 @@ public record OwcsProperties(
      * 無料ホスティングではアプリが無操作でスリープし、@Scheduled が止まる。
      * そのため画面の要求時にも鮮度を見て取り込む（maxAge）。
      * 失敗しているときに毎リクエスト叩かないよう retryInterval で間隔を空ける。
+     *
+     * 試合中は結果がすぐ変わるので liveMaxAge の短い間隔に切り替える。
      */
-    public record Sync(String resultsCron, String scheduleCron, Duration maxAge, Duration retryInterval) {
+    public record Sync(String resultsCron, String scheduleCron, Duration maxAge,
+                       Duration retryInterval, Duration liveMaxAge) {
     }
 }

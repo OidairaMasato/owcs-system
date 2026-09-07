@@ -1,4 +1,4 @@
-import type { HeadToHead, League, Today } from "./types";
+import type { HeadToHead, League, Rankings, Today } from "./types";
 
 async function json<T>(res: Response): Promise<T> {
   if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
@@ -21,6 +21,12 @@ export function fetchToday(): Promise<Today> {
 /** 対戦相手別の通算成績。 */
 export function fetchHeadToHead(teamId: number): Promise<HeadToHead> {
   return fetch(`/api/team/${teamId}/head-to-head`).then(json<HeadToHead>);
+}
+
+/** 年間の通算ランキング。year 省略で最新の年。 */
+export function fetchRankings(year: number | null): Promise<Rankings> {
+  const suffix = year != null ? `?year=${year}` : "";
+  return fetch(`/api/rankings${suffix}`).then(json<Rankings>);
 }
 
 /** 「今すぐ更新」。PandaScore から取り込み直してから返る。 */

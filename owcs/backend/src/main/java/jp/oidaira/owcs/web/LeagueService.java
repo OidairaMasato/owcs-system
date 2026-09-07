@@ -30,6 +30,8 @@ import jp.oidaira.owcs.web.LeagueDtos.HeadToHead;
 import jp.oidaira.owcs.web.LeagueDtos.HeadToHeadRow;
 import jp.oidaira.owcs.web.LeagueDtos.League;
 import jp.oidaira.owcs.web.LeagueDtos.MatchRow;
+import jp.oidaira.owcs.web.LeagueDtos.RankingRow;
+import jp.oidaira.owcs.web.LeagueDtos.Rankings;
 import jp.oidaira.owcs.web.LeagueDtos.StandingRowView;
 import jp.oidaira.owcs.web.LeagueDtos.SerieRef;
 import jp.oidaira.owcs.web.LeagueDtos.StandingsView;
@@ -192,6 +194,112 @@ public class LeagueService {
                 : new TeamView(teamId, "TBD", "TBD", null);
 
         return new HeadToHead(meView, wins, losses, rows);
+    }
+
+    /** Elo の初期値。全チームここから始める。 */
+    private static final double ELO_START = 1500;
+
+    /** Elo の変動幅。1 試合でどれだけ動かすか。 */
+    private static final double ELO_K = 32;
+
+    /** これ未満の試合数だと、その年のレーティングはまだ当てにならない。 */
+    private static final int PROVISIONAL_MATCHES = 5;
+
+    /**
+     * 年間ランキング。強さの指標は Elo レーティング。
+     *
+     * 勝率で並べると対戦相手の強さが無視されるので、
+     * 弱い地域で勝ち続けたチームが上位に来てしまい「強さ順」にならない。
+     * Elo は強い相手に勝つほど大きく上がるので、
+     * 国際大会を経由して地域をまたいだ比較ができる。
+     *
+     * レーティングは年で区切らず、取り込み済みの全試合を古い順に通して計算し、
+     * 対象年の末時点（当年なら現在）の値を出す。前年の実績を捨てないため。
+     * 表に出す勝敗はその年のぶんだけを数える。
+     *
+     * @param year null なら、試合があった最も新しい年
+     */
+    @Transactional(readOnly = true)
+    public Rankings rankings(Integer year) {
+        ZoneId jst = ZoneId.of("Asia/Tokyo");
+        List<Match> all = matchRepo.findAllFinished();   // 開始時刻の昇順
+
+        Set<Integer> yearSet = new java.util.TreeSet<>(Comparator.reverseOrder());
+        for (Match m : all) {
+            Integer y = yearOf(m, jst);
+            if (y != null) yearSet.add(y);
+        }
+        List<Integer> years = new ArrayList<>(yearSet);
+        if (years.isEmpty()) return new Rankings(0, years, List.of());
+        int target = year != null ? year : years.get(0);
+
+        Map<Integer, Double> rating = new HashMap<>();
+        Map<Integer, int[]> tally = new HashMap<>();   // その年だけ [勝, 敗, マップ勝, マップ敗]
+
+        for (Match m : all) {
+            Integer y = yearOf(m, jst);
+            // 対象年より後の試合は「その年末時点の強さ」に含めない
+            if (y == null || y > target) continue;
+
+            Integer a = m.getTeamAId();
+            Integer b = m.getTeamBId();
+            Integer winner = m.getWinnerId();
+            if (a == null || b == null || winner == null) continue;
+            if (a.intValue() == b.intValue()) continue;
+
+            double ra = rating.getOrDefault(a, ELO_START);
+            double rb = rating.getOrDefault(b, ELO_START);
+            // a から見た期待勝率。差が 400 なら約 90% になる
+            double expectedA = 1.0 / (1.0 + Math.pow(10, (rb - ra) / 400.0));
+            double actualA = winner.intValue() == a.intValue() ? 1.0 : 0.0;
+
+            rating.put(a, ra + ELO_K * (actualA - expectedA));
+            rating.put(b, rb + ELO_K * ((1.0 - actualA) - (1.0 - expectedA)));
+
+            if (y == target) {
+                accumulate(tally, m, a);
+                accumulate(tally, m, b);
+            }
+        }
+
+        Set<Integer> withLogo = new java.util.HashSet<>(logoRepo.findAllTeamIds());
+        Map<Integer, Team> teamById = new HashMap<>();
+        teamRepo.findAllById(tally.keySet()).forEach(t -> teamById.put(t.getId(), t));
+
+        List<RankingRow> rows = new ArrayList<>();
+        for (Map.Entry<Integer, int[]> e : tally.entrySet()) {
+            Team t = teamById.get(e.getKey());
+            if (t == null) continue;
+            int[] v = e.getValue();
+            int played = v[0] + v[1];
+            rows.add(new RankingRow(
+                    toView(t, withLogo),
+                    (int) Math.round(rating.getOrDefault(e.getKey(), ELO_START)),
+                    played < PROVISIONAL_MATCHES,
+                    played, v[0], v[1], v[2], v[3]));
+        }
+        // レーティングの高い順。同値なら試合数の多い方（標本が多い方）を上に
+        rows.sort(Comparator
+                .comparingInt((RankingRow r) -> -r.rating())
+                .thenComparingInt(r -> -r.played()));
+
+        return new Rankings(target, years, rows);
+    }
+
+    /** その試合が「何年の試合か」。日付は JST で判定する。 */
+    private static Integer yearOf(Match m, ZoneId jst) {
+        OffsetDateTime at = m.startsAt();
+        return at == null ? null : at.atZoneSameInstant(jst).getYear();
+    }
+
+    /** 1 試合ぶんを片方のチームの集計に足し込む。 */
+    private static void accumulate(Map<Integer, int[]> tally, Match m, int teamId) {
+        int[] v = tally.computeIfAbsent(teamId, k -> new int[4]);
+        if (m.getWinnerId() != null && m.getWinnerId() == teamId) v[0]++; else v[1]++;
+        Short us = m.scoreOf(teamId);
+        Short them = m.scoreAgainst(teamId);
+        if (us != null) v[2] += us;
+        if (them != null) v[3] += them;
     }
 
     /** 取り込み済みの大会一覧。新しい順。 */
