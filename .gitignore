@@ -20,3 +20,6 @@
 *.iml
 .DS_Store
 Thumbs.db
+
+# TypeScript のビルドキャッシュ
+*.tsbuildinfo
