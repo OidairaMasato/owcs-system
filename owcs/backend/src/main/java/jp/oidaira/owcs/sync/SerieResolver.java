@@ -33,6 +33,16 @@ public class SerieResolver {
     /** 1 件のシリーズ。 */
     public record SerieInfo(int id, String name, OffsetDateTime beginAt, OffsetDateTime endAt) {
 
+        /**
+         * まだ始まっていない大会か。
+         *
+         * PandaScore は大会の枠を先に作り、試合を後から入れてくることがある。
+         * 開始前の大会は「一度取ったから終わり」にしてはいけない。
+         */
+        boolean isUpcoming(Instant now) {
+            return beginAt == null || beginAt.toInstant().isAfter(now);
+        }
+
         /** 開催中か、その前後 margin 日以内か。 */
         boolean isHot(Instant now, int marginDays) {
             Duration margin = Duration.ofDays(marginDays);

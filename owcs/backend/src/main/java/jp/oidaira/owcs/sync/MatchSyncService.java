@@ -1,5 +1,7 @@
 package jp.oidaira.owcs.sync;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -73,20 +75,31 @@ public class MatchSyncService {
     // ---- ジョブ本体 -----------------------------------------------------
 
     /**
+     * まだ始まっていない大会を引き直す間隔。
+     *
+     * PandaScore は大会の枠を先に登録し、対戦カードを後から入れてくる。
+     * 「一度引いたから終わり」にすると、枠だけの状態で引いた大会が
+     * 開幕 7 日前（hot になる日）まで空のままになる。
+     * 次のステージの日程が出た瞬間に画面へ出したいので、開始前は引き直す。
+     */
+    private static final Duration UPCOMING_RECHECK = Duration.ofHours(1);
+
+    /**
      * 対象シリーズの全試合を取り込む。予定も結果もこれ 1 本で入る。
      *
      * 毎回引くのは開催中・直近の大会だけ。
      * 終わった大会は結果が変わらないので、一括取得の記録が無いとき（初回）だけ引く。
+     * まだ始まっていない大会は 1 時間おきに引き直す（上のコメント参照）。
      * これで対象が 12 大会あってもリクエストは数本で済む。
      */
     @Transactional
     public void syncMatches() {
         run(JOB_MATCHES, () -> {
             List<SerieResolver.SerieInfo> hot = series.hotSeries();
+            Instant now = Instant.now();
             int n = 0;
             for (SerieResolver.SerieInfo s : series.targetSeries()) {
-                boolean isHot = hot.contains(s);
-                if (!isHot && isFetched(s.id())) continue;
+                if (!needsFetch(s, hot.contains(s), now)) continue;
 
                 List<Ps.Match> src = client.matchesInSerie(s.id(), PER_PAGE);
                 if (src == null) continue;
@@ -100,9 +113,24 @@ public class MatchSyncService {
         });
     }
 
+    /** この大会をいま引き直すべきか。 */
+    private boolean needsFetch(SerieResolver.SerieInfo s, boolean isHot, Instant now) {
+        if (isHot) return true;                                  // 開催中は毎回
+        if (s.isUpcoming(now)) return !isFetchedWithin(s.id(), UPCOMING_RECHECK);
+        return !isFetched(s.id());                               // 終わった大会は初回だけ
+    }
+
     private boolean isFetched(int serieId) {
         return syncRepo.findById(serieKey(serieId))
                 .map(st -> st.getLastSuccessAt() != null)
+                .orElse(false);
+    }
+
+    /** 直近 within 以内に取り込めているか。 */
+    private boolean isFetchedWithin(int serieId, Duration within) {
+        return syncRepo.findById(serieKey(serieId))
+                .map(SyncState::getLastSuccessAt)
+                .map(at -> at.toInstant().isAfter(Instant.now().minus(within)))
                 .orElse(false);
     }
 
