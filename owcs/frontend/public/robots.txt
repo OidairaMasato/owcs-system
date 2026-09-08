@@ -1,0 +1,9 @@
+# クロールを歓迎する。禁止したいものは無い。
+User-agent: *
+Allow: /
+
+# 中身の無い JSON を検索結果に出させない
+Disallow: /api/
+Disallow: /calendar/
+
+Sitemap: https://owcs-system.onrender.com/sitemap.xml

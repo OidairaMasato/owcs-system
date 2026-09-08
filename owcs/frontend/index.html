@@ -8,6 +8,26 @@
     <meta name="theme-color" content="#070c18" />
     <meta name="description" content="OWCS の日程・結果・順位を見逃さないためのダッシュボード。全地域と国際大会に対応。" />
 
+    <link rel="canonical" href="https://owcs-system.onrender.com/" />
+
+    <!--
+      SNS に貼られたときのカード。これが無いと X では素の URL のまま出る。
+      og:image は絶対 URL でなければ読まれない。
+    -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="OWCS Watch" />
+    <meta property="og:locale" content="ja_JP" />
+    <meta property="og:url" content="https://owcs-system.onrender.com/" />
+    <meta property="og:title" content="OWCS Watch — OWCS の日程・結果・順位表" />
+    <meta property="og:description" content="OWCS の試合日程・結果・順位表・配信リンクを1画面に。全地域と国際大会に対応。個人制作の非公式サイト。" />
+    <meta property="og:image" content="https://owcs-system.onrender.com/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="OWCS Watch — OWCS の日程・結果・順位表" />
+    <meta name="twitter:description" content="OWCS の試合日程・結果・順位表・配信リンクを1画面に。全地域と国際大会に対応。個人制作の非公式サイト。" />
+    <meta name="twitter:image" content="https://owcs-system.onrender.com/og.png" />
+
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" href="/icon-192.png" />
 
@@ -16,9 +36,59 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="OWCS" />
+
+    <style>
+      /* styles.css は JS バンドル経由なので、読み込み前の白い一瞬を防ぐ */
+      body { background: #070c18; color: #eef2fa; margin: 0; }
+
+      .site-about {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 8px 18px 56px;
+        font-family: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN",
+                     "Noto Sans JP", sans-serif;
+        font-size: 12.5px;
+        line-height: 1.9;
+        color: #7d8ea8;
+      }
+      .site-about h1 { font-size: 14px; color: #b9c7de; margin: 0 0 10px; }
+      .site-about h2 { font-size: 12.5px; color: #b9c7de; margin: 20px 0 6px; }
+      .site-about p { margin: 0 0 12px; }
+      .site-about ul { margin: 0 0 12px; padding-left: 1.2em; }
+    </style>
   </head>
   <body>
     <div id="root"></div>
+
+    <!--
+      検索エンジンが読める本文。
+      画面本体は React が描くので、JS を実行しない相手には何も残らない。
+      ここは #root の外なので React に消されず、HTML にそのまま存在する。
+      隠さず表示しているのは、隠すとクローキング（不正な最適化）になるため。
+    -->
+    <section class="site-about">
+      <h1>OWCS Watch — OWCS の日程・結果・順位表</h1>
+      <p>
+        OWCS（Overwatch Champions Series）の試合日程、結果、順位表、配信リンクを
+        1 画面にまとめた個人制作のダッシュボードです。
+        Korea・Japan・Pacific・China・North America・EMEA の各地域リーグと、
+        Midseason Championship や World Finals などの国際大会に対応しています。
+      </p>
+      <h2>できること</h2>
+      <ul>
+        <li>今日の試合を、地域をまたいで一覧できる</li>
+        <li>次の試合までのカウントダウンと、配信（Twitch / YouTube）へのリンク</li>
+        <li>試合結果をマップ単位まで展開して確認できる</li>
+        <li>大会ごとの順位表</li>
+        <li>チームの対戦相手別の通算成績と、全大会を横断した年間ランキング</li>
+        <li>カレンダー購読（.ics）。登録しておくと試合開始前に通知が届く</li>
+      </ul>
+      <p>
+        データは PandaScore から自動で取得しています。入力の手間はありません。
+        スマートフォンではホーム画面に追加すると、アプリとして使えます。
+      </p>
+    </section>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
