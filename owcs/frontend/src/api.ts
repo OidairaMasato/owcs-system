@@ -29,6 +29,26 @@ export function fetchRankings(year: number | null): Promise<Rankings> {
   return fetch(`/api/rankings${suffix}`).then(json<Rankings>);
 }
 
+/**
+ * アクセスを 1 回数える。
+ *
+ * document.referrer はクライアントしか知らないので、こちらから送る。
+ * サーバー側の Referer ヘッダーは自サイトの URL になってしまい使えない。
+ * 失敗しても画面には影響しないので、握りつぶす。
+ */
+export function sendHit(): void {
+  try {
+    void fetch("/api/hit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ref: document.referrer }),
+      keepalive: true,
+    }).catch(() => undefined);
+  } catch {
+    /* 数えられなくても構わない */
+  }
+}
+
 /** 「今すぐ更新」。PandaScore から取り込み直してから返る。 */
 export function syncNow(serieId: number | null): Promise<League> {
   return fetch(`/api/sync${q(serieId)}`, { method: "POST" }).then(json<League>);
